@@ -1750,8 +1750,9 @@ function renderStatus() {
     if (el) el.style.strokeDashoffset = circ - (circ * pct / 100);
     if (tx) tx.textContent = Math.round(pct) + '%';
   };
-  const dq = state.quests.filter(q=>q.type==='daily');
-  const wq = state.quests.filter(q=>q.type==='weekly');
+  const todayDow = new Date().getDay();
+    const dq = state.quests.filter(q=>q.type==='daily' && (!q.days || q.days.includes(todayDow)));
+  const wq = state.quests.filter(q=>q.type==='weekly' && (!q.days || q.days.includes(todayDow)));
   const pq = state.quests.filter(q=>q.type==='projekt'||q.type==='main');
   setRing('ring-daily','ring-daily-txt', dq.length ? dq.filter(q=>q.done).length/dq.length*100 : 0);
   setRing('ring-weekly','ring-weekly-txt', wq.length ? wq.filter(q=>q.done).length/wq.length*100 : 0);
@@ -1954,7 +1955,8 @@ function renderQuests() {
   const list = document.getElementById('quests-list');
   let html = '';
   if (questFilter === 'all' || questFilter === 'daily') {
-    const dq = state.quests.filter(q=>q.type==='daily');
+    const todayDow = new Date().getDay();
+    const dq = state.quests.filter(q=>q.type==='daily' && (!q.days || q.days.includes(todayDow)));
     const usedIds = new Set(Object.values(DAILY_GROUPS).flat());
     Object.entries(DAILY_GROUPS).forEach(([grp, ids]) => {
       const inGrp = dq.filter(q=>ids.includes(q.id));
