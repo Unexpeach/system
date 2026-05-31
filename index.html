@@ -1981,7 +1981,8 @@ function renderQuests() {
   const list = document.getElementById('quests-list');
   let html = '';
   if (questFilter === 'all' || questFilter === 'daily') {
-    const todayDow = new Date().getDay();
+    const _rawDow = new Date().getDay();
+    const todayDow = _rawDow === 0 ? 7 : _rawDow; // Sonntag: JS=0 → normalize to 7
     const dq = state.quests.filter(q=>q.type==='daily' && (!q.days || q.days.includes(todayDow)));
     const usedIds = new Set(Object.values(DAILY_GROUPS).flat());
     Object.entries(DAILY_GROUPS).forEach(([grp, ids]) => {
@@ -2002,7 +2003,8 @@ function renderQuests() {
   }
   if (questFilter !== 'daily') {
     const types = questFilter === 'all' ? ['weekly','main','projekt'] : [questFilter];
-    const _dow = new Date().getDay();
+    const _rawDow2 = new Date().getDay();
+    const _dow = _rawDow2 === 0 ? 7 : _rawDow2; // Sonntag: JS=0 → normalize to 7
     types.forEach(t => {
       const tq = state.quests.filter(q=>q.type===t && (!q.days || q.days.includes(_dow)));
       if (!tq.length) return;
