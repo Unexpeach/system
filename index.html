@@ -1330,7 +1330,9 @@ const ROUTINE = [
 ];
 
 // ─── DEFAULT STATE ─────────────────────────────────────────────────────────────
+const DATA_VERSION = 2;
 const DEFAULT = {
+  dataVersion: DATA_VERSION,
   name:'NIKLAS', level:1, xp:0, xpToday:0, questsToday:0, habitsToday:0,
   lastDate: new Date().toDateString(),
   stats:{STR:1,INT:1,DIS:1,PRD:1,WIL:1,VIT:1},
@@ -1536,7 +1538,31 @@ function load() {
   document.addEventListener('touchstart', startMusicOnInteraction);
 
   const s = localStorage.getItem('sl_v4');
-  if (s) { try { state = JSON.parse(s); } catch(e){} }
+  if (s) {
+    try {
+      const saved = JSON.parse(s);
+      if ((saved.dataVersion || 1) < DATA_VERSION) {
+        // Migrate: keep personal progress, update quests/habits from DEFAULT
+        state = JSON.parse(JSON.stringify(DEFAULT));
+        state.name        = saved.name        || state.name;
+        state.level       = saved.level       || state.level;
+        state.xp          = saved.xp          || state.xp;
+        state.xpToday     = saved.xpToday     || 0;
+        state.stats       = saved.stats        || state.stats;
+        state.streak      = saved.streak       || 0;
+        state.lastDate    = saved.lastDate     || '';
+        state.achievements = saved.achievements || state.achievements;
+        state.skillProgress = saved.skillProgress || {};
+        state.goals       = saved.goals        || state.goals;
+        state.comboStreak = saved.comboStreak  || 0;
+        state.dataVersion = DATA_VERSION;
+        save();
+        notify('⬆️ Daten aktualisiert — Quests & Habits erneuert, Fortschritt behalten!', true);
+      } else {
+        state = saved;
+      }
+    } catch(e) {}
+  }
   checkDayReset();
   setAvatars();
 }
@@ -1976,8 +2002,9 @@ function renderQuests() {
   }
   if (questFilter !== 'daily') {
     const types = questFilter === 'all' ? ['weekly','main','projekt'] : [questFilter];
+    const _dow = new Date().getDay();
     types.forEach(t => {
-      const tq = state.quests.filter(q=>q.type===t);
+      const tq = state.quests.filter(q=>q.type===t && (!q.days || q.days.includes(_dow)));
       if (!tq.length) return;
       if (questFilter === 'all') html += `<div class="group-divider"><span>${t.toUpperCase()}</span></div>`;
       [...tq.filter(q=>!q.done),...tq.filter(q=>q.done)].forEach(q => {
