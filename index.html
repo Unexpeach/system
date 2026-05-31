@@ -1371,10 +1371,10 @@ const DEFAULT = {
     {id:4,title:'OFM · Content-Plan & TikTok-Liste checken',type:'daily',diff:'C',xp:50,stat:'PRD',statGain:1,done:false},
     {id:5,title:'OFM · Chats: Subscriber bearbeitet (alle Models)',type:'daily',diff:'C',xp:50,stat:'PRD',statGain:1,done:false},
     {id:30,title:'OFM · X/Twitter: Post oder Kommentar (alle Models)',type:'daily',diff:'D',xp:25,stat:'PRD',statGain:1,done:false},
-    {id:31,title:'OFM · Reddit: Post (alle Models, Mo–Fr)',type:'daily',diff:'D',xp:25,stat:'PRD',statGain:1,done:false},
+    {id:31,title:'OFM · Reddit: Post (alle Models, Mo–Fr)',type:'daily',diff:'D',xp:25,stat:'PRD',statGain:1,days:[1,2,3,4,5],done:false},
     {id:32,title:'OFM · Akquise: Mind. 1 potenzielles Model kontaktiert',type:'daily',diff:'C',xp:50,stat:'PRD',statGain:1,done:false},
     {id:33,title:'OFM · Trending Audios/Sounds gecheckt',type:'daily',diff:'E',xp:15,stat:'INT',statGain:1,done:false},
-    {id:54,title:'OF · Content hochgeladen (alle aktiven Models)',type:'daily',diff:'D',xp:25,stat:'PRD',statGain:1,done:false},
+    {id:54,title:'OF · Content hochgeladen (alle aktiven Models)',type:'daily',diff:'D',xp:25,stat:'PRD',statGain:1,days:[2,4,6],done:false},
     {id:19,title:'Spanisch · Lektion des Tages',type:'daily',diff:'D',xp:25,stat:'INT',statGain:1,done:false},
     {id:20,title:'Lesen + Notizen · Ego is the Enemy (15–30 Min)',type:'daily',diff:'D',xp:25,stat:'INT',statGain:1,done:false},
     {id:6,title:'Bewegung des Tages (Sport / Walk / Training)',type:'daily',diff:'C',xp:50,stat:'STR',statGain:1,done:false},
@@ -1406,7 +1406,6 @@ const DEFAULT = {
     {id:1011,title:'Ziele & Vision reviewed',type:'monthly',diff:'C',xp:150,stat:'KLR',statGain:1,dayOfMonth:15,progress:0},
     {id:92,title:'Spanisch · Lektion',type:'weekly',diff:'D',xp:50,stat:'INT',statGain:1,days:[2,4,6],count:3,progress:0},
     {id:93,title:'1 Versprechen an mich selbst gehalten diese Woche',type:'weekly',diff:'C',xp:75,stat:'WIL',statGain:2,days:[1],count:1,progress:0},
-    {id:1012,title:'Mein Wort stand diese Woche',type:'weekly',diff:'C',xp:100,stat:'WIL',statGain:1,done:false},
     // MAIN
     {id:13,title:'OFM · TikTok auf 5 Videos bringen',type:'main',diff:'B',xp:300,stat:'PRD',statGain:3,done:false},
     {id:14,title:'OFM · Kompletten Funnel dokumentiert',type:'main',diff:'A',xp:600,stat:'INT',statGain:5,done:false},
@@ -2313,6 +2312,16 @@ function loadTrack(idx) {
   audio.load();
   if (wasPlaying || musicPlaying) audio.play().catch(()=>{});
 }
+
+// Auto-advance to next track when current ends
+document.addEventListener('DOMContentLoaded', function() {
+  const audio = document.getElementById('bg-audio');
+  if (audio) {
+    audio.addEventListener('ended', function() {
+      nextTrack();
+    });
+  }
+});
 
 function nextTrack() {
   loadTrack(currentTrack + 1);
