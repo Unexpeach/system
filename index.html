@@ -1330,7 +1330,7 @@ const ROUTINE = [
 ];
 
 // ─── DEFAULT STATE ─────────────────────────────────────────────────────────────
-const DATA_VERSION = 3;
+const DATA_VERSION = 2;
 const DEFAULT = {
   dataVersion: DATA_VERSION,
   name:'NIKLAS', level:1, xp:0, xpToday:0, questsToday:0, habitsToday:0,
@@ -1544,57 +1544,22 @@ function load() {
       if ((saved.dataVersion || 1) < DATA_VERSION) {
         // Migrate: keep personal progress, update quests/habits from DEFAULT
         state = JSON.parse(JSON.stringify(DEFAULT));
-        state.name          = saved.name          || state.name;
-        state.level         = saved.level         || state.level;
-        state.xp            = saved.xp            || state.xp;
-        state.xpToday       = saved.xpToday       || 0;
-        state.stats         = saved.stats         || state.stats;
-        state.streak        = saved.streak        || 0;
-        state.lastDate      = saved.lastDate      || '';
-        state.achievements  = saved.achievements  || state.achievements;
+        state.name        = saved.name        || state.name;
+        state.level       = saved.level       || state.level;
+        state.xp          = saved.xp          || state.xp;
+        state.xpToday     = saved.xpToday     || 0;
+        state.stats       = saved.stats        || state.stats;
+        state.streak      = saved.streak       || 0;
+        state.lastDate    = saved.lastDate     || '';
+        state.achievements = saved.achievements || state.achievements;
         state.skillProgress = saved.skillProgress || {};
-        state.goals         = saved.goals         || state.goals;
-        state.comboStreak   = saved.comboStreak   || 0;
-        state.questsToday   = saved.questsToday   || 0;
-        state.habitsToday   = saved.habitsToday   || 0;
-        state.ofmFans       = saved.ofmFans       || 0;
-        state.ofmRevenue    = saved.ofmRevenue    || 0;
-        state.ofmGoal       = saved.ofmGoal       || 1000;
-        state.model2Unlocked = saved.model2Unlocked || false;
-        // Preserve habits done/streak state
-        if (saved.habits && saved.habits.length) {
-          const savedHabitMap = {};
-          saved.habits.forEach(h => { savedHabitMap[h.id] = h; });
-          state.habits.forEach(h => {
-            const sh = savedHabitMap[h.id];
-            if (sh) { h.done = sh.done; h.streak = sh.streak || 0; h.lastDone = sh.lastDone; h.inRecovery = sh.inRecovery || false; }
-          });
-        }
-        // Preserve quest done/progress state
-        if (saved.quests && saved.quests.length) {
-          const savedQuestMap = {};
-          saved.quests.forEach(q => { savedQuestMap[q.id] = q; });
-          state.quests.forEach(q => {
-            const sq = savedQuestMap[q.id];
-            if (sq) { q.done = sq.done || false; q.progress = sq.progress || 0; }
-          });
-        }
+        state.goals       = saved.goals        || state.goals;
+        state.comboStreak = saved.comboStreak  || 0;
         state.dataVersion = DATA_VERSION;
         save();
-        notify('⬆️ Quests & Habits aktualisiert — Fortschritt behalten!', true);
+        notify('⬆️ Daten aktualisiert — Quests & Habits erneuert, Fortschritt behalten!', true);
       } else {
         state = saved;
-        // Sync days/count/type from DEFAULT quests into saved state (ensures Sunday filter always works)
-        const defaultQuestMap = {};
-        DEFAULT.quests.forEach(dq => { defaultQuestMap[dq.id] = dq; });
-        state.quests.forEach(q => {
-          const def = defaultQuestMap[q.id];
-          if (def) {
-            if (def.days !== undefined) q.days = def.days;
-            if (def.count !== undefined) q.count = def.count;
-            if (def.type !== undefined) q.type = def.type;
-          }
-        });
       }
     } catch(e) {}
   }
@@ -1811,8 +1776,7 @@ function renderStatus() {
     if (el) el.style.strokeDashoffset = circ - (circ * pct / 100);
     if (tx) tx.textContent = Math.round(pct) + '%';
   };
-  const _rdow = new Date().getDay();
-  const todayDow = _rdow === 0 ? 0 : _rdow; // keep 0 for Sunday (matches days:[0])
+  const todayDow = new Date().getDay();
     const dq = state.quests.filter(q=>q.type==='daily' && (!q.days || q.days.includes(todayDow)));
   const wq = state.quests.filter(q=>q.type==='weekly' && (!q.days || q.days.includes(todayDow)));
   const pq = state.quests.filter(q=>q.type==='projekt'||q.type==='main');
@@ -1946,19 +1910,12 @@ function filterQ(f, btn) {
 function questCard(q, idx, isM2) {
   const rankColors = {E:'#475569',D:'#94a3b8',C:'#22c55e',B:'#4f8ef7',A:'#a855f7',S:'#f5c542'};
   const typeColors = {daily:'#00d4ff',weekly:'#a855f7',main:'#f5c542',projekt:'#22c55e'};
-  const isCount = q.count && q.count > 1;
-  const prog = q.progress || 0;
-  const isDone = isCount ? prog >= q.count : q.done;
-  const onclickFn = isCount && !isDone ? `incrementWeeklyQuest(${q.id})` : `toggleQ(${idx},${isM2})`;
-  const checkInner = isDone
-    ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;color:#22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%"><polyline points="20 6 9 17 4 12"/></svg></span>'
-    : (isCount ? `<span style="font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;color:#a855f7">${prog}/${q.count}</span>` : '');
-  return `<div class="glass rounded-xl p-4 mb-2 flex items-center gap-3 cursor-pointer transition-all quest-glow ${isDone?'quest-done':''}"
+  return `<div class="glass rounded-xl p-4 mb-2 flex items-center gap-3 cursor-pointer transition-all quest-glow ${q.done?'quest-done':''}"
     style="border-left:3px solid ${typeColors[q.type]||'#3c494e'}"
-    onclick="${onclickFn}">
+    onclick="toggleQ(${idx},${isM2})">
     <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all"
-      style="border-color:${isDone?'#22c55e':isCount&&prog>0?'#a855f7':'rgba(255,255,255,0.2)'};background:${isDone?'rgba(34,197,94,0.2)':isCount&&prog>0?'rgba(168,85,247,0.15)':'transparent'}">
-      ${checkInner}
+      style="border-color:${q.done?'#22c55e':'rgba(255,255,255,0.2)'};background:${q.done?'rgba(34,197,94,0.2)':'transparent'}">
+      ${q.done?'<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;color:#22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%"><circle cx="12" cy="12" r="4"/></svg></span>':''}
     </div>
     <div class="flex-1 min-w-0">
       <p class="quest-title text-sm text-on-surface font-medium leading-snug mb-1">${q.title}</p>
@@ -2025,7 +1982,7 @@ function renderQuests() {
   let html = '';
   if (questFilter === 'all' || questFilter === 'daily') {
     const todayDow = new Date().getDay();
-    const dq = state.quests.filter(q=>q.type==='daily' && (!q.days || q.days.includes(todayDow)));
+    const dq = state.quests.filter(q=>(q.type==='daily'||(q.type==='weekly'&&q.days)) && (!q.days || q.days.includes(todayDow)));
     const usedIds = new Set(Object.values(DAILY_GROUPS).flat());
     Object.entries(DAILY_GROUPS).forEach(([grp, ids]) => {
       const inGrp = dq.filter(q=>ids.includes(q.id));
@@ -2050,7 +2007,7 @@ function renderQuests() {
       const tq = state.quests.filter(q=>q.type===t && (!q.days || q.days.includes(_dow)));
       if (!tq.length) return;
       if (questFilter === 'all') html += `<div class="group-divider"><span>${t.toUpperCase()}</span></div>`;
-      [...tq.filter(q=>!(q.count&&q.count>1?q.progress>=q.count:q.done)),...tq.filter(q=>q.count&&q.count>1?q.progress>=q.count:q.done)].forEach(q => {
+      [...tq.filter(q=>!q.done),...tq.filter(q=>q.done)].forEach(q => {
         html += questCard(q, state.quests.indexOf(q), false);
       });
     });
