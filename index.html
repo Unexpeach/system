@@ -88,6 +88,21 @@ tailwind.config = {
   0% { stroke-dashoffset: 1000; }
   100% { stroke-dashoffset: 0; }
 }
+.hub-line {
+  display: none;
+  fill: none;
+  stroke: #00d4ff;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px #00d4ff);
+  opacity: 0.75;
+  stroke-dasharray: 12 18;
+  animation: flow-out 1.4s linear infinite;
+}
+@keyframes flow-out {
+  0%   { stroke-dashoffset: 60; }
+  100% { stroke-dashoffset: 0; }
+}
 .mana-line {
   stroke-dasharray: 20, 30;
   animation: mana-flow 45s linear infinite;
@@ -294,18 +309,7 @@ tailwind.config = {
   stroke-linejoin: round;
 }
 
-.skill-line {
-  animation: mana-flow 3s linear infinite;
-  background: linear-gradient(90deg, transparent, #00d4ff, transparent) !important;
-  background-size: 200% 100% !important;
-}
-@keyframes skill-line-flow {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
-}
-.skill-line {
-  animation: skill-line-flow 2s linear infinite;
-}
+
 </style>
 </head>
 <body class="text-on-surface font-body overflow-x-hidden min-h-screen">
@@ -716,6 +720,43 @@ tailwind.config = {
   <div id="goals-list" class="space-y-2"></div>
 </div>
 
+<!-- Quest Menu Panel -->
+<div id="quest-menu-panel" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px)" onclick="closeQuestMenu()">
+  <div onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:rgba(10,10,12,0.98);border-top:1px solid rgba(0,212,255,0.2);border-radius:16px 16px 0 0;padding:20px;padding-bottom:90px;max-height:85vh;overflow-y:auto">
+    <div id="qm-info" style="margin-bottom:16px;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08)">
+      <p id="qm-title" class="font-display" style="font-size:15px;font-weight:700;color:#e5e1e4;margin-bottom:6px"></p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <span id="qm-type" class="font-mono" style="font-size:9px;color:#859398;text-transform:uppercase;letter-spacing:1px"></span>
+        <span id="qm-xp" class="font-mono" style="font-size:9px;color:#f5c542"></span>
+        <span id="qm-stat" class="font-mono" style="font-size:9px;color:#00d4ff"></span>
+      </div>
+    </div>
+    <div id="qm-edit" style="margin-bottom:16px">
+      <p class="font-mono" style="font-size:9px;color:#859398;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Bearbeiten</p>
+      <input id="qm-edit-title" type="text" placeholder="Titel" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px;margin-bottom:8px;box-sizing:border-box"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <select id="qm-edit-diff" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px">
+          <option value="E">E — Leicht</option><option value="D">D — Normal</option><option value="C">C — Mittel</option><option value="B">B — Schwer</option><option value="A">A — Sehr schwer</option><option value="S">S — Legendär</option>
+        </select>
+        <input id="qm-edit-xp" type="number" placeholder="XP" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px"/>
+      </div>
+      <button onclick="saveQuestEdit()" style="width:100%;padding:10px;background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.3);border-radius:6px;color:#00d4ff;font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;cursor:pointer">SPEICHERN</button>
+    </div>
+    <button onclick="confirmDeleteQuest()" style="width:100%;padding:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#ef4444;font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>QUEST LÖSCHEN
+    </button>
+  </div>
+</div>
+<div id="quest-delete-confirm" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="background:rgba(10,10,12,0.98);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:24px;margin:20px;max-width:320px;width:100%">
+    <p class="font-mono" style="font-size:12px;color:#ef4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Quest löschen?</p>
+    <p id="qm-delete-title" class="font-display" style="font-size:14px;color:#e5e1e4;margin-bottom:20px"></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button onclick="closeDeleteConfirm()" style="padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#859398;font-family:JetBrains Mono,monospace;font-size:11px;cursor:pointer">ABBRECHEN</button>
+      <button onclick="executeDeleteQuest()" style="padding:10px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);border-radius:6px;color:#ef4444;font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;cursor:pointer">LÖSCHEN</button>
+    </div>
+  </div>
+</div>
 <!-- ===== STATISTIK ===== -->
 <div class="tab-content fade-in" id="tab-stats">
   <div class="glass rounded-xl p-5 mb-4">
@@ -777,6 +818,48 @@ tailwind.config = {
       <input id="ofm-entry-revenue" type="number" placeholder="Umsatz €" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px"/>
       <input id="ofm-entry-fans" type="number" placeholder="Fans" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px"/>
       <button onclick="addOFMEntry()" style="padding:8px 14px;background:#fde68a;color:#000;border:none;border-radius:6px;cursor:pointer;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;letter-spacing:1px;white-space:nowrap">+</button>
+    </div>
+  </div>
+
+  <!-- Sparen & Investieren Dashboard -->
+  <div class="glass rounded-xl p-5 mb-4">
+    <p class="font-mono text-xs uppercase tracking-widest mb-4" style="color:rgba(0,212,255,0.7);letter-spacing:2px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M8 12h1m6 0h1"/></svg>
+      Vermögensaufbau
+    </p>
+    <p class="font-mono" style="font-size:9px;color:#859398;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Sparkonto</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+        <p class="font-mono" style="font-size:8px;color:#859398;text-transform:uppercase;margin-bottom:3px">Gespart</p>
+        <p class="font-display" style="font-size:22px;font-weight:900;color:#fde68a" id="dash-savings">0€</p>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+        <p class="font-mono" style="font-size:8px;color:#859398;text-transform:uppercase;margin-bottom:3px">Nächstes Ziel</p>
+        <p class="font-display" style="font-size:16px;font-weight:900;color:#22c55e" id="dash-savings-next">500€</p>
+      </div>
+    </div>
+    <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:12px">
+      <div id="dash-savings-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#fde68a,#f5c542);border-radius:4px;transition:width .5s ease"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px">
+      <input id="savings-input" type="number" placeholder="Aktueller Kontostand €" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px"/>
+      <button onclick="updateSavings()" style="padding:8px 14px;background:#fde68a;color:#000;border:none;border-radius:6px;cursor:pointer;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700">✓</button>
+    </div>
+    <p class="font-mono" style="font-size:9px;color:#859398;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Investitionen</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+        <p class="font-mono" style="font-size:8px;color:#859398;text-transform:uppercase;margin-bottom:3px">Investiert</p>
+        <p class="font-display" style="font-size:22px;font-weight:900;color:#6ee7b7" id="dash-invest">0€</p>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center">
+        <p class="font-mono" style="font-size:8px;color:#859398;text-transform:uppercase;margin-bottom:3px">Positionen</p>
+        <p class="font-display" style="font-size:22px;font-weight:900;color:#6ee7b7" id="dash-portfolio">0</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="invest-input" type="number" placeholder="Gesamtbetrag €" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px"/>
+      <input id="portfolio-input" type="number" placeholder="Positionen" style="width:80px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:#e5e1e4;font-family:JetBrains Mono,monospace;font-size:11px"/>
+      <button onclick="updateInvest()" style="padding:8px 14px;background:#6ee7b7;color:#000;border:none;border-radius:6px;cursor:pointer;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700">✓</button>
     </div>
   </div>
 
@@ -880,7 +963,7 @@ tailwind.config = {
 
 
 <!-- ===== SKILL TREE ===== -->
-<div class="tab-content fade-in" id="tab-skilltree" style="height:calc(100vh - 130px);overflow:hidden;position:relative">
+<div class="tab-content fade-in" id="tab-skilltree" style="position:fixed;top:64px;bottom:64px;left:0;right:0;overflow:hidden;z-index:10">
 
   <canvas id="skill-particles" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1"></canvas>
   <div style="position:absolute;inset:0;background:radial-gradient(circle at center, rgba(0,119,255,0.06) 0%, transparent 70%);pointer-events:none;z-index:0"></div>
@@ -890,131 +973,99 @@ tailwind.config = {
   <button id="skill-back-btn" onclick="collapseSkill()" style="display:none;position:absolute;top:12px;left:12px;z-index:15;background:rgba(10,10,12,0.9);border:1px solid rgba(0,212,255,0.3);color:#00d4ff;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;padding:6px 14px;border-radius:4px;cursor:pointer">← ZURÜCK</button>
   <div id="skill-breadcrumb" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:15;font-family:'JetBrains Mono',monospace;font-size:10px;color:#859398;letter-spacing:2px;text-transform:uppercase"></div>
 
-  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none">
-    <div id="skill-canvas" style="position:relative;width:400px;height:500px;pointer-events:all">
-<svg id="skill-svg" style="position:absolute;top:0;left:0;width:400px;height:500px;pointer-events:none;z-index:2" viewBox="0 0 400 500"></svg>
+  <div style="position:absolute;inset:0;z-index:3;pointer-events:none">
+    <div id="skill-canvas" style="position:absolute;inset:0;pointer-events:all">
 
-<div style="position:absolute;left:230.6px;top:196.1px;width:81.2px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(-60.4deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
-<div style="position:absolute;left:258.7px;top:229.9px;width:59.7px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(-18.9deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
-<div style="position:absolute;left:254.7px;top:279.2px;width:47.5px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(28.1deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
-<div style="position:absolute;left:214.6px;top:310.3px;width:52.6px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(76.4deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
-<div style="position:absolute;left:168.6px;top:303.4px;width:71.5px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(120.5deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
-<div style="position:absolute;left:142.1px;top:272.1px;width:93.1px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(159.1deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
-<div style="position:absolute;left:139.9px;top:234.7px;width:107.6px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(-165.7deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
-<div style="position:absolute;left:158.7px;top:203.7px;width:110.5px;height:2px;background:linear-gradient(90deg,#00d4ff,#00d4ff88);opacity:0.8;transform-origin:0 50%;transform:rotate(-131.7deg);box-shadow:0 0 6px #00d4ff;pointer-events:none;z-index:2" class="skill-line"></div>
+      <!-- SVG for dynamic step-view lines -->
+      <svg id="skill-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2" viewBox="0 0 400 480"></svg>
 
+      <!-- SVG for hub→node lines (drawn by JS) -->
+      <svg id="hub-lines-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible"></svg>
 
-      <!-- CENTRAL HUB -->
-      <div class="animate-pulse-glow" id="skill-hub" style="position:absolute;left:200px;top:250px;transform:translate(-50%,-50%);z-index:10;cursor:default;transition:all .4s">
+      <!-- CENTRAL HUB (positioned by JS) -->
+      <div class="animate-pulse-glow" id="skill-hub" style="position:absolute;z-index:10;cursor:default">
         <div class="pulse-aura" style="position:absolute;inset:-32px;background:rgba(0,212,255,0.12);border-radius:50%;filter:blur(24px)"></div>
-        <div style="position:relative;width:110px;height:110px;border-radius:50%;background:rgba(18,18,20,0.95);border:3px solid #00d4ff;box-shadow:0 0 40px rgba(0,212,255,0.5);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:translate(-50%,-50%)">
+        <div style="width:116px;height:116px;border-radius:50%;background:rgba(18,18,20,0.95);border:3px solid #00d4ff;box-shadow:0 0 40px rgba(0,212,255,0.5);display:flex;flex-direction:column;align-items:center;justify-content:center">
           <span class="font-mono" style="font-size:8px;color:rgba(0,212,255,0.6);letter-spacing:2px;text-transform:uppercase">HUNTER</span>
           <span class="font-display glitch-text-anim" style="font-size:32px;font-weight:900;color:#00d4ff;line-height:1.1" id="skill-level-hub">1</span>
           <span class="font-mono" style="font-size:8px;color:rgba(0,212,255,0.4);letter-spacing:1px" id="skill-rank-hub">RANK E</span>
         </div>
       </div>
 
-      <!-- STAT NODES -->
-      <div id="stat-nodes-layer">
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="STR" data-nx="175.0" data-ny="55.0"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:175.0px;top:55.0px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-0s"
-           onclick="expandStat('STR',175.0,55.0)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #ef4444;box-shadow:0 0 20px #ef444455;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 15.5C5 14 4 12 4 10a8 8 0 0 1 16 0c0 2-.8 3.8-2 5"/><path d="M8 19h8"/><path d="M8 19c0-2 1.5-3.5 4-3.5s4 1.5 4 3.5"/></svg>
+      <!-- STAT NODES (positioned by JS via layoutSkillTree()) -->
+      <div id="stat-nodes-layer" style="position:absolute;inset:0">
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="STR" data-angle="-90" style="position:absolute;z-index:5;cursor:pointer;animation-delay:0s" onclick="expandStat('STR',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #ef4444;box-shadow:0 0 20px #ef444455;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 15.5C5 14 4 12 4 10a8 8 0 0 1 16 0c0 2-.8 3.8-2 5"/><path d="M8 19h8"/><path d="M8 19c0-2 1.5-3.5 4-3.5s4 1.5 4 3.5"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #ef444444;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#ef4444;letter-spacing:1px" id="snode-STR">STR 1</span>
+          </div>
         </div>
-        <div style="position:absolute;left:32px;top:-20px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #ef444444;padding:2px 6px;border-radius:3px;text-align:center">
-          <span class="font-mono" style="font-size:9px;color:#ef4444;letter-spacing:1px" id="snode-STR">STR 1</span>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="INT" data-angle="-50" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-1s" onclick="expandStat('INT',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #4f8ef7;box-shadow:0 0 20px #4f8ef755;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.71-4.03 2.5 2.5 0 0 1-1.33-4.41 2.5 2.5 0 0 1 .44-4.5A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.71-4.03 2.5 2.5 0 0 0 1.33-4.41 2.5 2.5 0 0 0-.44-4.5A2.5 2.5 0 0 0 14.5 2z"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #4f8ef744;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#4f8ef7;letter-spacing:1px" id="snode-INT">INT 1</span>
+          </div>
         </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="INT" data-nx="287.5" data-ny="95.9"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:287.5px;top:95.9px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-1s"
-           onclick="expandStat('INT',287.5,95.9)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #4f8ef7;box-shadow:0 0 20px #4f8ef755;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.71-4.03 2.5 2.5 0 0 1-1.33-4.41 2.5 2.5 0 0 1 .44-4.5A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.71-4.03 2.5 2.5 0 0 0 1.33-4.41 2.5 2.5 0 0 0-.44-4.5A2.5 2.5 0 0 0 14.5 2z"/></svg>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="PRD" data-angle="10" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-2s" onclick="expandStat('PRD',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #f5c542;box-shadow:0 0 20px #f5c54255;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f5c542" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #f5c54244;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#f5c542;letter-spacing:1px" id="snode-PRD">PRD 1</span>
+          </div>
         </div>
-        <div style="position:absolute;left:65px;top:-8px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #4f8ef744;padding:2px 6px;border-radius:3px;text-align:left">
-          <span class="font-mono" style="font-size:9px;color:#4f8ef7;letter-spacing:1px" id="snode-INT">INT 1</span>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="VIT" data-angle="50" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-3s" onclick="expandStat('VIT',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #ec4899;box-shadow:0 0 20px #ec489955;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #ec489944;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#ec4899;letter-spacing:1px" id="snode-VIT">VIT 1</span>
+          </div>
         </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="PRD" data-nx="347.3" data-ny="199.6"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:347.3px;top:199.6px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-2s"
-           onclick="expandStat('PRD',347.3,199.6)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #f5c542;box-shadow:0 0 20px #f5c54255;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f5c542" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="WIL" data-angle="110" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-4s" onclick="expandStat('WIL',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #a855f7;box-shadow:0 0 20px #a855f755;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #a855f744;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#a855f7;letter-spacing:1px" id="snode-WIL">WIL 1</span>
+          </div>
         </div>
-        <div style="position:absolute;left:83px;top:23px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #f5c54244;padding:2px 6px;border-radius:3px;text-align:left">
-          <span class="font-mono" style="font-size:9px;color:#f5c542;letter-spacing:1px" id="snode-PRD">PRD 1</span>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="DIS" data-angle="150" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-5s" onclick="expandStat('DIS',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #22c55e;box-shadow:0 0 20px #22c55e55;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #22c55e44;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#22c55e;letter-spacing:1px" id="snode-DIS">DIS 1</span>
+          </div>
         </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="VIT" data-nx="326.6" data-ny="317.5"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:326.6px;top:317.5px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-3s"
-           onclick="expandStat('VIT',326.6,317.5)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #ec4899;box-shadow:0 0 20px #ec489955;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="ITG" data-angle="-170" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-6s" onclick="expandStat('ITG',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #e2e8f0;box-shadow:0 0 20px #e2e8f055;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #e2e8f044;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#e2e8f0;letter-spacing:1px" id="snode-ITG">ITG 1</span>
+          </div>
         </div>
-        <div style="position:absolute;left:77px;top:58px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #ec489944;padding:2px 6px;border-radius:3px;text-align:left">
-          <span class="font-mono" style="font-size:9px;color:#ec4899;letter-spacing:1px" id="snode-VIT">VIT 1</span>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="WLT" data-angle="-130" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-7s" onclick="expandStat('WLT',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #fde68a;box-shadow:0 0 20px #fde68a55;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M8 12h1m6 0h1"/><path d="M9.5 9.5c.5-1 1.5-1.5 2.5-1.5s2 .5 2.5 1.5M14.5 14.5c-.5 1-1.5 1.5-2.5 1.5s-2-.5-2.5-1.5"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #fde68a44;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#fde68a;letter-spacing:1px" id="snode-WLT">WLT 1</span>
+          </div>
         </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="WIL" data-nx="234.9" data-ny="394.4"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:234.9px;top:394.4px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-4s"
-           onclick="expandStat('WIL',234.9,394.4)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #a855f7;box-shadow:0 0 20px #a855f755;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z"/></svg>
+        <div class="skill-node-active animate-pulse-glow stat-node" data-key="KLR" data-angle="-50" style="position:absolute;z-index:5;cursor:pointer;animation-delay:-8s" onclick="expandStat('KLR',0,0)">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #6ee7b7;box-shadow:0 0 20px #6ee7b755;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-4 8H9c-1-2-4-4-4-8a7 7 0 0 1 7-7z"/><path d="M9 21h6m-6-3h6"/></svg>
+          </div>
+          <div class="node-label" style="position:absolute;white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #6ee7b744;padding:2px 6px;border-radius:3px">
+            <span class="font-mono" style="font-size:9px;color:#6ee7b7;letter-spacing:1px" id="snode-KLR">KLR 1</span>
+          </div>
         </div>
-        <div style="position:absolute;left:50px;top:81px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #a855f744;padding:2px 6px;border-radius:3px;text-align:left">
-          <span class="font-mono" style="font-size:9px;color:#a855f7;letter-spacing:1px" id="snode-WIL">WIL 1</span>
-        </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="DIS" data-nx="115.1" data-ny="394.4"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:115.1px;top:394.4px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-5s"
-           onclick="expandStat('DIS',115.1,394.4)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #22c55e;box-shadow:0 0 20px #22c55e55;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        </div>
-        <div style="position:absolute;left:14px;top:81px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #22c55e44;padding:2px 6px;border-radius:3px;text-align:right">
-          <span class="font-mono" style="font-size:9px;color:#22c55e;letter-spacing:1px" id="snode-DIS">DIS 1</span>
-        </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="ITG" data-nx="23.4" data-ny="317.5"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:23.4px;top:317.5px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-6s"
-           onclick="expandStat('ITG',23.4,317.5)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #e2e8f0;box-shadow:0 0 20px #e2e8f055;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <div style="position:absolute;left:-13px;top:58px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #e2e8f044;padding:2px 6px;border-radius:3px;text-align:right">
-          <span class="font-mono" style="font-size:9px;color:#e2e8f0;letter-spacing:1px" id="snode-ITG">ITG 1</span>
-        </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="WLT" data-nx="2.7" data-ny="199.6"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:2.7px;top:199.6px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-7s"
-           onclick="expandStat('WLT',2.7,199.6)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #fde68a;box-shadow:0 0 20px #fde68a55;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M8 12h1m6 0h1"/><path d="M9.5 9.5c.5-1 1.5-1.5 2.5-1.5s2 .5 2.5 1.5M14.5 14.5c-.5 1-1.5 1.5-2.5 1.5s-2-.5-2.5-1.5"/></svg>
-        </div>
-        <div style="position:absolute;left:-19px;top:23px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #fde68a44;padding:2px 6px;border-radius:3px;text-align:right">
-          <span class="font-mono" style="font-size:9px;color:#fde68a;letter-spacing:1px" id="snode-WLT">WLT 1</span>
-        </div>
-      </div>
-      <div class="skill-node-active animate-pulse-glow stat-node"
-           data-key="KLR" data-nx="62.5" data-ny="95.9"
-           style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;position:absolute;left:62.5px;top:95.9px;transform:translate(-50%,-50%);z-index:5;cursor:pointer;animation-delay:-8s"
-           onclick="expandStat('KLR',62.5,95.9)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(18,18,20,0.9);border:2px solid #6ee7b7;box-shadow:0 0 20px #6ee7b755;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-4 8H9c-1-2-4-4-4-8a7 7 0 0 1 7-7z"/><path d="M9 21h6m-6-3h6"/></svg>
-        </div>
-        <div style="position:absolute;left:-1px;top:-8px;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(10,10,12,0.92);border:1px solid #6ee7b744;padding:2px 6px;border-radius:3px;text-align:right">
-          <span class="font-mono" style="font-size:9px;color:#6ee7b7;letter-spacing:1px" id="snode-KLR">KLR 1</span>
-        </div>
-      </div>
       </div>
 
       <!-- DYNAMIC NODES -->
@@ -1334,6 +1385,9 @@ const DATA_VERSION = 2;
 const DEFAULT = {
   dataVersion: DATA_VERSION,
   name:'NIKLAS', level:1, xp:0, xpToday:0, questsToday:0, habitsToday:0, workoutStreak:0, workoutLastDate:'',
+  morningStreak:0, morningLastDate:'', bibleStreak:0, bibleLastDate:'',
+  socialMediaStreak:0, socialMediaLastDate:'', gamingStreak:0, gamingLastDate:'',
+  weeklyReliability:0, savingsAmount:0, investAmount:0, portfolioSlots:0,
   lastDate: new Date().toDateString(),
   stats:{STR:1,INT:1,DIS:1,PRD:1,WIL:1,VIT:1},
   ofmFans:0, ofmRevenue:0, ofmGoal:1000, ofmHistory:[],
@@ -1369,6 +1423,9 @@ const DEFAULT = {
     {id:1,title:'Morgenroutine ✓ (Gebet · Wasser · Stretching)',type:'daily',diff:'D',xp:25,stat:'VIT',statGain:1,done:false},
     {id:2,title:'500ml Wasser nach dem Aufstehen',type:'daily',diff:'E',xp:10,stat:'VIT',statGain:1,done:false},
     {id:300,title:'Supplements ✓ · B-Komplex · Omega 3 · Magnesium · Zink · Kreatin',type:'daily',diff:'E',xp:20,stat:'VIT',statGain:2,done:false},
+    {id:1012,title:'Bibel gelesen & gebetet heute',type:'daily',diff:'D',xp:25,stat:'WIL',statGain:1,done:false},
+    {id:1013,title:'Social Media unter 1h heute',type:'daily',diff:'C',xp:30,stat:'WIL',statGain:1,done:false},
+    {id:1014,title:'Spielzeit unter 2h heute (oder gar nicht)',type:'daily',diff:'C',xp:25,stat:'WIL',statGain:1,done:false},
     {id:3,title:'OFM · Tagesplanung (3 Prioritäten festlegen)',type:'daily',diff:'D',xp:25,stat:'PRD',statGain:1,done:false},
     {id:4,title:'OFM · Content-Plan & TikTok-Liste checken',type:'daily',diff:'C',xp:50,stat:'PRD',statGain:1,done:false},
     {id:5,title:'OFM · Chats: Subscriber bearbeitet (alle Models)',type:'daily',diff:'C',xp:50,stat:'PRD',statGain:1,done:false},
@@ -1408,6 +1465,8 @@ const DEFAULT = {
     {id:1011,title:'Ziele & Vision reviewed',type:'monthly',diff:'C',xp:150,stat:'KLR',statGain:1,dayOfMonth:15,progress:0},
     {id:92,title:'Spanisch · Lektion',type:'weekly',diff:'D',xp:50,stat:'INT',statGain:1,days:[2,4,6],count:3,progress:0},
     {id:93,title:'1 Versprechen an mich selbst gehalten diese Woche',type:'weekly',diff:'C',xp:75,stat:'WIL',statGain:2,days:[1],count:1,progress:0},
+    {id:94,title:'Ausgaben der Woche notiert & überprüft',type:'weekly',diff:'C',xp:75,stat:'INT',statGain:1,days:[0],count:1,progress:0},
+    {id:95,title:'Diese Woche alle Zusagen gegenüber anderen eingehalten',type:'weekly',diff:'C',xp:75,stat:'ITG',statGain:2,days:[0],count:1,progress:0},
     // MAIN
     {id:13,title:'OFM · TikTok auf 5 Videos bringen',type:'main',diff:'B',xp:300,stat:'PRD',statGain:3,done:false},
     {id:14,title:'OFM · Kompletten Funnel dokumentiert',type:'main',diff:'A',xp:600,stat:'INT',statGain:5,done:false},
@@ -1454,6 +1513,9 @@ const DEFAULT = {
     {id:102,title:'SOP · Content-Erstellungs-Guide fertig',type:'projekt',diff:'A',xp:600,stat:'INT',statGain:5,done:false},
     {id:103,title:'SOP · Chatter-Guide & Texting-Regeln',type:'projekt',diff:'A',xp:600,stat:'INT',statGain:5,done:false},
     {id:104,title:'SOP · Reddit & X Posting-Guide fertig',type:'projekt',diff:'B',xp:400,stat:'INT',statGain:4,done:false},
+    {id:500,title:'Vision · Vision Board erstellt',type:'projekt',diff:'D',xp:150,stat:'KLR',statGain:1,done:false},
+    {id:501,title:'Vision · Top 3 Jahresziele schriftlich festgehalten',type:'projekt',diff:'D',xp:200,stat:'KLR',statGain:2,done:false},
+    {id:502,title:'Vision · 5-Jahres-Plan schriftlich ausgearbeitet',type:'projekt',diff:'C',xp:300,stat:'KLR',statGain:2,done:false},
     {id:105,title:'SOP · Master-Dokument zusammengefasst',type:'projekt',diff:'A',xp:750,stat:'INT',statGain:6,done:false},
   ],
   habits:[
@@ -1557,7 +1619,7 @@ function load() {
         state.comboStreak = saved.comboStreak  || 0;
         state.dataVersion = DATA_VERSION;
         save();
-        notify('⬆️ Daten aktualisiert — Quests & Habits erneuert, Fortschritt behalten!', true);
+        notify(NI.update + 'Daten aktualisiert — Quests & Habits erneuert, Fortschritt behalten!', true);
       } else {
         state = saved;
       }
@@ -1585,7 +1647,7 @@ function resetAllData() {
   state = JSON.parse(JSON.stringify(DEFAULT));
   save();
   render();
-  notify('🔄 Kompletter Neustart — alles zurückgesetzt!', true);
+  notify(NI.refresh + 'Kompletter Neustart — alles zurückgesetzt!', true);
 }
 
 function setAvatars() {
@@ -1610,7 +1672,7 @@ function checkStreakPenalties() {
       h.inRecovery = true;
       h.recoveryAttempts = 0;
       h.streak = 0;
-      notify('❄️ ' + h.name + ' — Streak gebrochen! Recovery aktiv', false);
+      notify(NI.ice + ' ' + h.name + ' — Streak gebrochen! Recovery aktiv', false);
     }
     
     if (h.inRecovery) {
@@ -1621,7 +1683,7 @@ function checkStreakPenalties() {
         h.recoveryAttempts = 0;
         if (h.stat && state.stats[h.stat] > 1) {
           state.stats[h.stat] = Math.max(1, state.stats[h.stat] - 1);
-          notify('💀 ' + h.name + ' — Strafe! ' + h.stat + ' -1', false);
+          notify(NI.skull + ' ' + h.name + ' — Strafe! ' + h.stat + ' -1', false);
         }
       }
     }
@@ -1639,7 +1701,7 @@ function completeHabitWithRecovery(i) {
     h.inRecovery = false;
     h.recoveryAttempts = 0;
     h.streak = 1;
-    notify('🔥 ' + h.name + ' — Streak recovered!', true);
+    notify(NI.fire + ' ' + h.name + ' — Streak recovered!', true);
   }
 }
 
@@ -1678,7 +1740,7 @@ function checkDayReset() {
     });
     if (missedXP > 0 && !isVacationActive()) {
       state.xp = Math.max(0, state.xp - missedXP);
-      notify('⚠️ Gestrige Dailys verpasst — -' + missedXP + ' XP Strafe!', false);
+      notify(NI.warn + 'Gestrige Dailys verpasst — -' + missedXP + ' XP Strafe!', false);
     }
     const dow = new Date().getDay();
     if (dow === 1) state.quests.forEach(q => { if (q.type === 'weekly') q.done = false; });
@@ -1710,17 +1772,42 @@ function addXP(amt) {
     state.level++;
     playSound('levelup');
     spawnLevelUpParticles();
-    notify('LEVEL UP — Level ' + state.level, true);
-    if (state.level % 10 === 1 && state.level > 1) notify('RANG AUFSTIEG → ' + getRank(state.level), true);
+    notify(NI.levelup + 'LEVEL UP — Level ' + state.level, true);
+    if (state.level % 10 === 1 && state.level > 1) notify(NI.star + 'RANG AUFSTIEG → ' + getRank(state.level), true);
   }
   save(); render();
 }
 
 // ─── NOTIFY ────────────────────────────────────────────────────────────────────
+function nIcon(path, color='currentColor') {
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;flex-shrink:0">${path}</svg>`;
+}
+const NI = {
+  check:   nIcon('<polyline points="20 6 9 17 4 12"/>'),
+  undo:    nIcon('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/>'),
+  warn:    nIcon('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', '#f5c542'),
+  levelup: nIcon('<polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>', '#00d4ff'),
+  star:    nIcon('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', '#a855f7'),
+  trophy:  nIcon('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>', '#22c55e'),
+  lock:    nIcon('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>', '#fde68a'),
+  fire:    nIcon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z"/>', '#ef4444'),
+  ice:     nIcon('<line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>', '#00d4ff'),
+  skull:   nIcon('<circle cx="12" cy="11" r="8"/><path d="M8 15h8"/><path d="M9 15v2m6-2v2"/><circle cx="9.5" cy="10" r="1.5" fill="currentColor"/><circle cx="14.5" cy="10" r="1.5" fill="currentColor"/>', '#ef4444'),
+  bolt:    nIcon('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>', '#f5c542'),
+  target:  nIcon('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>', '#22c55e'),
+  refresh: nIcon('<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/>'),
+  import:  nIcon('<polyline points="20 6 9 17 4 12"/><path d="M22 11V7h-5"/><path d="M22 7l-5 5"/>'),
+  copy:    nIcon('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+  update:  nIcon('<polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/>', '#00d4ff'),
+  vacation:nIcon('<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>', '#00d4ff'),
+};
+
 function notify(msg, isLvl) {
   const el = document.createElement('div');
   el.className = 'notif' + (isLvl ? ' lvlup' : '');
-  el.textContent = msg;
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.innerHTML = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3200);
 }
@@ -1783,7 +1870,7 @@ function renderStatus() {
   };
   const todayDow = new Date().getDay();
     const dq = state.quests.filter(q=>q.type==='daily' && (!q.days || q.days.includes(todayDow)));
-  const wq = state.quests.filter(q=>q.type==='weekly' && (!q.days || q.days.includes(todayDow)));
+  const wq = state.quests.filter(q=>q.type==='weekly');
   const pq = state.quests.filter(q=>q.type==='projekt'||q.type==='main');
   setRing('ring-daily','ring-daily-txt', dq.length ? dq.filter(q=>q.done).length/dq.length*100 : 0);
   setRing('ring-weekly','ring-weekly-txt', wq.length ? wq.filter(q=>q.done).length/wq.length*100 : 0);
@@ -1931,8 +2018,8 @@ function questCard(q, idx, isM2) {
         ${q.stat?`<span class="font-mono text-xs text-outline">+${q.statGain||1} ${q.stat}</span>`:''}
       </div>
     </div>
-    ${!isM2?`<button class="text-outline hover:text-error transition-colors shrink-0" onclick="event.stopPropagation();delQ(${idx})">
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%"><circle cx="12" cy="12" r="4"/></svg></span>
+    ${!isM2?`<button class="text-outline hover:text-primary transition-colors shrink-0" onclick="event.stopPropagation();openQuestMenu(${idx})" style="padding:4px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg>
     </button>`:''}
   </div>`;
 }
@@ -1971,10 +2058,10 @@ function incrementWeeklyQuest(id) {
       showStatUpBanner(q.stat, state.stats[q.stat]);
     }
   }
-    notify('✅ ' + q.title + ' abgeschlossen! +' + q.xp + ' XP', true);
+    notify(NI.check + '' + q.title + ' abgeschlossen! +' + q.xp + ' XP', true);
   } else {
     addXP(Math.floor(q.xp / (q.count||1)));
-    notify('⚡ ' + q.title + ' · ' + q.progress + '/' + q.count, false);
+    notify(NI.bolt + ' ' + q.title + ' · ' + q.progress + '/' + q.count, false);
   }
   playSound('complete');
   save();
@@ -2009,7 +2096,7 @@ function renderQuests() {
     const types = questFilter === 'all' ? ['weekly','main','projekt'] : [questFilter];
     const _dow = new Date().getDay();
     types.forEach(t => {
-      const tq = state.quests.filter(q=>q.type===t && (!q.days || q.days.includes(_dow)));
+      const tq = state.quests.filter(q=>q.type===t && (t==='weekly' || !q.days || q.days.includes(_dow)));
       if (!tq.length) return;
       if (questFilter === 'all') html += `<div class="group-divider"><span>${t.toUpperCase()}</span></div>`;
       [...tq.filter(q=>!q.done),...tq.filter(q=>q.done)].forEach(q => {
@@ -2075,7 +2162,7 @@ function toggleQ(i, isM2) {
         state.stats['STR'] = (state.stats['STR']||1)+1;
         const nextNode = kraftNodes[kraftNodes.indexOf(n)+1];
         const nextMsg = nextNode ? ` Nächste Stufe: ${nextNode.label}!` : ' Maximale Kraft erreicht!';
-        setTimeout(()=>notify(`🏆 STR Kraft freigeschaltet: ${n.label}!${nextMsg}`,true),600);
+        setTimeout(()=>notify(NI.trophy + `STR Kraft freigeschaltet: ${n.label}!${nextMsg}`,true),600);
       }
     });
     state.skillProgress = sp;
@@ -2117,7 +2204,7 @@ function toggleQ(i, isM2) {
           sp[n.id] = true;
           addXP(n.xp);
           state.stats['STR'] = (state.stats['STR']||1)+1;
-          setTimeout(()=>notify(`🏆 STR Ausdauer freigeschaltet: ${n.label}!`,true),700);
+          setTimeout(()=>notify(NI.trophy + `STR Ausdauer freigeschaltet: ${n.label}!`,true),700);
         }
       }
     });
@@ -2126,7 +2213,7 @@ function toggleQ(i, isM2) {
     const goal = state.goals.find(g=>g.id===2);
     if (goal && goal.current < goal.steps) {
       goal.current++;
-      if (goal.current >= goal.steps) { addXP(500); notify('🎯 ZIEL ERREICHT: Körperliche Basis aufgebaut!',true); }
+      if (goal.current >= goal.steps) { addXP(500); notify(NI.target + 'ZIEL ERREICHT: Körperliche Basis aufgebaut!',true); }
     }
   }
   if (!isM2 && state.goalLinks && state.goalLinks[q.id]) {
@@ -2137,6 +2224,105 @@ function toggleQ(i, isM2) {
     state.model2Unlocked = true;
     setTimeout(()=>notify('Model 2 Quests freigeschaltet!',true),500);
   }
+
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now()-86400000).toDateString();
+  const sp = state.skillProgress || {};
+
+  // Helper: update a daily streak and check skill nodes
+  function updateDailyStreak(streakKey, dateKey, nodes, statKey) {
+    const last = state[dateKey] || '';
+    if (last === today) return;
+    state[streakKey] = (last === yesterday) ? (state[streakKey]||0)+1 : 1;
+    state[dateKey] = today;
+    nodes.forEach(n => {
+      if (!sp[n.id] && state[streakKey] >= n.target) {
+        sp[n.id] = true; addXP(n.xp);
+        state.stats[statKey] = (state.stats[statKey]||1) + (n.statGain||1);
+        setTimeout(()=>notify(NI.trophy + `${n.label} freigeschaltet!`,true),600);
+      }
+    });
+    state.skillProgress = sp;
+  }
+
+  // Morgenroutine (id:1) → morningStreak → STR Mobilität
+  if (!isM2 && q.id === 1) {
+    updateDailyStreak('morningStreak','morningLastDate',[
+      {id:'str_m1',target:7,xp:75,statGain:1,label:'STR Mobilität 7 Tage'},
+      {id:'str_m2',target:14,xp:150,statGain:1,label:'STR Mobilität 14 Tage'},
+      {id:'str_m3',target:21,xp:250,statGain:2,label:'STR Mobilität 21 Tage'},
+      {id:'str_m4',target:30,xp:350,statGain:2,label:'STR Mobilität 30 Tage'},
+      {id:'str_m5',target:60,xp:500,statGain:3,label:'STR Mobilität 60 Tage'},
+      {id:'str_m6',target:90,xp:750,statGain:4,label:'STR Mobilität 90 Tage 🏆'},
+    ],'STR');
+  }
+
+  // Bibel gelesen & gebetet (id:1012) → bibleStreak → WIL Bibel & Gebet
+  if (!isM2 && q.id === 1012) {
+    updateDailyStreak('bibleStreak','bibleLastDate',[
+      {id:'wil_g1',target:7,xp:100,statGain:1,label:'WIL Bibel & Gebet 7 Tage'},
+      {id:'wil_g2',target:14,xp:200,statGain:2,label:'WIL Bibel & Gebet 14 Tage'},
+      {id:'wil_g3',target:21,xp:300,statGain:2,label:'WIL Bibel & Gebet 21 Tage'},
+      {id:'wil_g4',target:30,xp:450,statGain:3,label:'WIL Bibel & Gebet 30 Tage'},
+      {id:'wil_g5',target:60,xp:650,statGain:4,label:'WIL Bibel & Gebet 60 Tage'},
+      {id:'wil_g6',target:90,xp:900,statGain:6,label:'WIL Bibel & Gebet 90 Tage 🏆'},
+    ],'WIL');
+  }
+
+  // Social Media unter 1h (id:1013) → socialMediaStreak → WIL Fokus
+  if (!isM2 && q.id === 1013) {
+    updateDailyStreak('socialMediaStreak','socialMediaLastDate',[
+      {id:'wil_f1',target:7,xp:100,statGain:1,label:'WIL Fokus: Social Media 7 Tage'},
+      {id:'wil_f2',target:14,xp:200,statGain:2,label:'WIL Fokus: Social Media 14 Tage'},
+      {id:'wil_f3',target:30,xp:350,statGain:2,label:'WIL Fokus: Social Media 30 Tage'},
+    ],'WIL');
+  }
+
+  // Spielen unter 2h (id:1014) → gamingStreak → WIL Fokus
+  if (!isM2 && q.id === 1014) {
+    updateDailyStreak('gamingStreak','gamingLastDate',[
+      {id:'wil_f4',target:7,xp:100,statGain:1,label:'WIL Fokus: Spielen 7 Tage'},
+      {id:'wil_f5',target:14,xp:200,statGain:2,label:'WIL Fokus: Spielen 14 Tage'},
+      {id:'wil_f6',target:30,xp:350,statGain:3,label:'WIL Fokus: Spielen 30 Tage'},
+    ],'WIL');
+  }
+
+  // Verlässlichkeit Weekly Quest (id:95) → weeklyReliability → ITG Verlässlichkeit
+  if (!isM2 && q.id === 95) {
+    state.weeklyReliability = (state.weeklyReliability||0) + 1;
+    const relNodes = [
+      {id:'itg_v1',target:1,xp:100,statGain:1,label:'ITG Verlässlichkeit 1 Woche'},
+      {id:'itg_v2',target:2,xp:200,statGain:2,label:'ITG Verlässlichkeit 2 Wochen'},
+      {id:'itg_v3',target:4,xp:400,statGain:3,label:'ITG Verlässlichkeit 1 Monat'},
+      {id:'itg_v4',target:12,xp:700,statGain:5,label:'ITG Verlässlichkeit 3 Monate'},
+      {id:'itg_v5',target:24,xp:1200,statGain:7,label:'ITG Verlässlichkeit 6 Monate 🏆'},
+    ];
+    relNodes.forEach(n => {
+      if (!sp[n.id] && state.weeklyReliability >= n.target) {
+        sp[n.id] = true; addXP(n.xp);
+        state.stats['ITG'] = (state.stats['ITG']||1) + n.statGain;
+        setTimeout(()=>notify(NI.trophy + `${n.label} freigeschaltet!`,true),600);
+      }
+    });
+    state.skillProgress = sp;
+  }
+
+  // KLR Vision — wenn Projekt abgehakt → Node freischalten
+  if (!isM2 && q.type === 'projekt') {
+    const visionLinks = {500:'klr_v1', 501:'klr_v2', 502:'klr_v3'};
+    const nodeId = visionLinks[q.id];
+    if (nodeId && !sp[nodeId]) {
+      sp[nodeId] = true;
+      const nodeXPs = {'klr_v1':150,'klr_v2':200,'klr_v3':300};
+      const nodeStats = {'klr_v1':1,'klr_v2':2,'klr_v3':2};
+      addXP(nodeXPs[nodeId]||150);
+      state.stats['KLR'] = (state.stats['KLR']||1) + (nodeStats[nodeId]||1);
+      const labels = {'klr_v1':'Vision Board','klr_v2':'Jahresziele','klr_v3':'5-Jahres-Plan'};
+      setTimeout(()=>notify(NI.trophy + `KLR Vision freigeschaltet: ${labels[nodeId]}!`,true),600);
+      state.skillProgress = sp;
+    }
+  }
+
   save(); render();
 }
 
@@ -2150,6 +2336,48 @@ function addQuest() {
 }
 
 function delQ(i) { state.quests.splice(i,1); save(); render(); }
+
+let _questMenuIdx = -1;
+function openQuestMenu(idx) {
+  _questMenuIdx = idx;
+  const q = state.quests[idx];
+  if (!q) return;
+  document.getElementById('qm-title').textContent = q.title;
+  document.getElementById('qm-type').textContent = (q.type||'daily').toUpperCase();
+  document.getElementById('qm-xp').textContent = '+' + q.xp + ' XP';
+  document.getElementById('qm-stat').textContent = q.stat ? '+' + (q.statGain||1) + ' ' + q.stat : '';
+  document.getElementById('qm-edit-title').value = q.title;
+  document.getElementById('qm-edit-diff').value = q.diff || 'D';
+  document.getElementById('qm-edit-xp').value = q.xp || '';
+  document.getElementById('quest-menu-panel').style.display = 'block';
+}
+function closeQuestMenu() {
+  document.getElementById('quest-menu-panel').style.display = 'none';
+  document.getElementById('quest-delete-confirm').style.display = 'none';
+}
+function saveQuestEdit() {
+  const q = state.quests[_questMenuIdx];
+  if (!q) return;
+  q.title = document.getElementById('qm-edit-title').value.trim() || q.title;
+  q.diff = document.getElementById('qm-edit-diff').value;
+  q.xp = parseInt(document.getElementById('qm-edit-xp').value) || q.xp;
+  save(); render(); closeQuestMenu();
+  notify(NI.check + 'Quest aktualisiert!');
+}
+function confirmDeleteQuest() {
+  const q = state.quests[_questMenuIdx];
+  if (!q) return;
+  document.getElementById('qm-delete-title').textContent = q.title;
+  document.getElementById('quest-delete-confirm').style.display = 'flex';
+}
+function closeDeleteConfirm() {
+  document.getElementById('quest-delete-confirm').style.display = 'none';
+}
+function executeDeleteQuest() {
+  state.quests.splice(_questMenuIdx, 1);
+  save(); render(); closeQuestMenu();
+  notify(NI.check + 'Quest gelöscht.');
+}
 
 // ─── HABITS ────────────────────────────────────────────────────────────────────
 function renderHabits() {
@@ -2289,7 +2517,7 @@ function toggleH(i) {
         sp[n.id] = true;
         addXP(n.xp);
         state.stats['STR'] = (state.stats['STR']||1)+1;
-        setTimeout(()=>notify(`🏆 STR Mobilität freigeschaltet: ${n.label}!`,true),700);
+        setTimeout(()=>notify(NI.trophy + `STR Mobilität freigeschaltet: ${n.label}!`,true),700);
       }
     });
     state.skillProgress = sp;
@@ -2374,7 +2602,8 @@ function switchTabById(name) {
 }
 
 function switchTab(name, btn) {
-  if (name === 'stats') setTimeout(renderStats, 50);
+  if (name === 'stats') setTimeout(()=>{ renderStats(); renderSavingsInvest(); }, 50);
+  if (name === "skilltree") setTimeout(layoutSkillTree, 300);
   playSound('click');
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>{
@@ -2408,11 +2637,11 @@ function exportData() {
   const out = JSON.stringify(state, null, 2);
   document.getElementById('export-out').textContent = out;
   document.getElementById('import-area').classList.add('open');
-  setTimeout(()=>{ navigator.clipboard.writeText(out).then(()=>notify('In Zwischenablage kopiert!')).catch(()=>{}); },100);
+  setTimeout(()=>{ navigator.clipboard.writeText(out).then(()=>notify(NI.copy + 'In Zwischenablage kopiert!')).catch(()=>{}); },100);
 }
-function copyExport() { navigator.clipboard.writeText(document.getElementById('export-out').textContent).then(()=>notify('Kopiert!')); }
+function copyExport() { navigator.clipboard.writeText(document.getElementById('export-out').textContent).then(()=>notify(NI.copy + 'Kopiert!')); }
 function importData() {
-  try { state=JSON.parse(document.getElementById('import-input').value); save(); render(); notify('Import erfolgreich!'); document.getElementById('import-input').value=''; }
+  try { state=JSON.parse(document.getElementById('import-input').value); save(); render(); notify(NI.import + 'Import erfolgreich!'); document.getElementById('import-input').value=''; }
   catch(e) { alert('Ungültiges Format!'); }
 }
 function resetAll() { if(confirm('Wirklich alles zurücksetzen?')){ localStorage.removeItem('sl_v4'); location.reload(); } }
@@ -2744,7 +2973,7 @@ function updateSkillTree() {
 }
 
 // ─── SKILL TREE SYSTEM ───────────────────────────────────────────────────────
-const SKILL_TREE ={"STR": {"name": "Stärke", "color": "#ef4444", "paths": [{"name": "Kraft", "icon": "dumbbell", "nodes": [{"id": "str_k1", "label": "30 Wdh. × 7 Tage", "req": "7 Tage täglich 30 Liegestütze, Kniebeugen & Situps", "xp": 100, "statGain": 1, "autoTrack": "workoutStreak", "autoTarget": 7}, {"id": "str_k2", "label": "40 Wdh. × 7 Tage", "req": "7 Tage täglich 40 Wdh. jeder Übung", "xp": 150, "statGain": 1, "autoTrack": "workoutStreak", "autoTarget": 14}, {"id": "str_k3", "label": "50 Wdh. × 7 Tage", "req": "7 Tage täglich 50 Wdh.", "xp": 200, "statGain": 2, "autoTrack": "workoutStreak", "autoTarget": 21}, {"id": "str_k4", "label": "60 Wdh. × 7 Tage", "req": "7 Tage täglich 60 Wdh.", "xp": 250, "statGain": 2, "autoTrack": "workoutStreak", "autoTarget": 28}, {"id": "str_k5", "label": "70 Wdh. × 7 Tage", "req": "7 Tage täglich 70 Wdh.", "xp": 350, "statGain": 3, "autoTrack": "workoutStreak", "autoTarget": 35}, {"id": "str_k6", "label": "80 Wdh. × 7 Tage", "req": "7 Tage täglich 80 Wdh.", "xp": 450, "statGain": 3, "autoTrack": "workoutStreak", "autoTarget": 42}, {"id": "str_k7", "label": "90 Wdh. × 7 Tage 🏆", "req": "7 Tage täglich 90 Wdh. jeder Übung", "xp": 600, "statGain": 5, "autoTrack": "workoutStreak", "autoTarget": 49}]}, {"name": "Ausdauer", "icon": "run", "nodes": [{"id": "str_a1", "label": "1× Sport/Woche", "req": "1× Sport diese Woche", "xp": 50, "statGain": 1}, {"id": "str_a2", "label": "3× Sport/Woche", "req": "3× Sport in einer Woche", "xp": 100, "statGain": 1}, {"id": "str_a3", "label": "5× Sport/Woche", "req": "5× Sport in einer Woche", "xp": 150, "statGain": 2}, {"id": "str_a4", "label": "10 Tage Streak", "req": "10 Tage Workout-Streak", "xp": 250, "statGain": 2}, {"id": "str_a5", "label": "21 Tage Streak", "req": "21 Tage Workout-Streak", "xp": 400, "statGain": 3}, {"id": "str_a6", "label": "30 Tage Streak", "req": "30 Tage Workout-Streak", "xp": 600, "statGain": 5}]}, {"name": "Mobilität", "icon": "self_improvement", "nodes": [{"id": "str_m1", "label": "7 Tage Streak", "req": "7 Tage Stretching täglich", "xp": 75, "statGain": 1}, {"id": "str_m2", "label": "14 Tage Streak", "req": "14 Tage Stretching täglich", "xp": 150, "statGain": 1}, {"id": "str_m3", "label": "21 Tage Streak", "req": "21 Tage Stretching täglich", "xp": 250, "statGain": 2}, {"id": "str_m4", "label": "30 Tage Streak", "req": "30 Tage Stretching täglich", "xp": 350, "statGain": 2}, {"id": "str_m5", "label": "60 Tage Streak", "req": "60 Tage Stretching täglich", "xp": 500, "statGain": 3}, {"id": "str_m6", "label": "90 Tage Streak 🏆", "req": "90 Tage Stretching täglich", "xp": 750, "statGain": 4}]}]}, "INT": {"name": "Intelligenz", "color": "#4f8ef7", "paths": [{"name": "Lesen", "icon": "book_open", "nodes": [{"id": "int_l1", "label": "10 Seiten/Tag", "req": "10 Seiten täglich lesen", "xp": 50, "statGain": 1}, {"id": "int_l2", "label": "Buch 1 fertig", "req": "Ego is the Enemy abgeschlossen", "xp": 200, "statGain": 2}, {"id": "int_l3", "label": "Buch 2 fertig", "req": "Ikigai abgeschlossen", "xp": 200, "statGain": 2}, {"id": "int_l4", "label": "Buch 3 fertig", "req": "Stoic Path to Wealth abgeschlossen", "xp": 250, "statGain": 2}, {"id": "int_l5", "label": "5 Bücher fertig", "req": "5 Bücher insgesamt abgeschlossen", "xp": 400, "statGain": 3}, {"id": "int_l6", "label": "Alle 7 Bücher", "req": "Alle 7 Bücher abgeschlossen", "xp": 700, "statGain": 5}]}, {"name": "Spanisch", "icon": "globe", "nodes": [{"id": "int_s1", "label": "3 Lektionen", "req": "3 Spanisch-Lektionen gemacht", "xp": 50, "statGain": 1}, {"id": "int_s2", "label": "7 Tage Streak", "req": "7 Tage Spanisch-Streak", "xp": 100, "statGain": 1}, {"id": "int_s3", "label": "14 Tage Streak", "req": "14 Tage Spanisch-Streak", "xp": 200, "statGain": 2}, {"id": "int_s4", "label": "A1 Niveau", "req": "Spanisch A1 erreicht", "xp": 350, "statGain": 3}, {"id": "int_s5", "label": "Erste Konversation", "req": "Erste Spanisch-Konversation geführt", "xp": 500, "statGain": 4}, {"id": "int_s6", "label": "A2 Niveau", "req": "Spanisch A2 erreicht", "xp": 700, "statGain": 5}]}, {"name": "Finanzen", "icon": "trending_up", "nodes": [{"id": "int_f1", "label": "Haushaltsbuch 7 Tage", "req": "7 Tage Ausgaben notiert", "xp": 75, "statGain": 1}, {"id": "int_f2", "label": "Haushaltsbuch 30 Tage", "req": "30 Tage Ausgaben notiert", "xp": 200, "statGain": 2}, {"id": "int_f3", "label": "Erstes Budget", "req": "Monatliches Budget erstellt", "xp": 150, "statGain": 1}, {"id": "int_f4", "label": "1 Monat im Budget", "req": "1 Monat im Budget", "xp": 300, "statGain": 2}, {"id": "int_f5", "label": "3 Monate im Budget", "req": "3 Monate im Budget", "xp": 500, "statGain": 3}, {"id": "int_f6", "label": "1.000 Euro angespart", "req": "Notgroschen aufgebaut", "xp": 700, "statGain": 5}]}]}, "PRD": {"name": "Produktivität", "color": "#f5c542", "paths": [{"name": "Fans", "icon": "users", "nodes": [{"id": "prd_f1", "label": "10 Fans", "req": "10 aktive Fans auf OF", "xp": 100, "statGain": 1}, {"id": "prd_f2", "label": "25 Fans", "req": "25 aktive Fans", "xp": 150, "statGain": 1}, {"id": "prd_f3", "label": "50 Fans", "req": "50 aktive Fans", "xp": 250, "statGain": 2}, {"id": "prd_f4", "label": "100 Fans", "req": "100 aktive Fans", "xp": 400, "statGain": 3}, {"id": "prd_f5", "label": "250 Fans", "req": "250 aktive Fans", "xp": 600, "statGain": 4}, {"id": "prd_f6", "label": "500 Fans", "req": "500 aktive Fans", "xp": 800, "statGain": 5}]}, {"name": "Umsatz", "icon": "coins", "nodes": [{"id": "prd_u1", "label": "100€", "req": "Erste 100€ Umsatz", "xp": 150, "statGain": 1}, {"id": "prd_u2", "label": "500€", "req": "500€ Monatsumsatz", "xp": 300, "statGain": 2}, {"id": "prd_u3", "label": "1.000€", "req": "1.000€ Monatsumsatz", "xp": 500, "statGain": 3}, {"id": "prd_u4", "label": "2.500€", "req": "2.500€ Monatsumsatz", "xp": 700, "statGain": 4}, {"id": "prd_u5", "label": "5.000€", "req": "5.000€ Monatsumsatz", "xp": 1000, "statGain": 5}, {"id": "prd_u6", "label": "10.000€", "req": "10.000€ Monatsumsatz", "xp": 1500, "statGain": 7}]}, {"name": "Skalierung", "icon": "trending_up", "nodes": [{"id": "prd_s1", "label": "Model 1 live", "req": "Model 1 vollständig live", "xp": 200, "statGain": 2}, {"id": "prd_s2", "label": "Erstes Worksheet", "req": "Erstes Worksheet rausgeschickt", "xp": 150, "statGain": 1}, {"id": "prd_s3", "label": "Model 2 live", "req": "Model 2 onboarded & live", "xp": 400, "statGain": 3}, {"id": "prd_s4", "label": "Texter eingestellt", "req": "Erster Texter eingearbeitet", "xp": 600, "statGain": 4}, {"id": "prd_s5", "label": "3 Models aktiv", "req": "3 Models gleichzeitig aktiv", "xp": 800, "statGain": 5}, {"id": "prd_s6", "label": "Agency Status", "req": "5+ Models, Team läuft selbstständig", "xp": 1500, "statGain": 8}]}]}, "WIL": {"name": "Willenskraft", "color": "#a855f7", "paths": [{"name": "Gebet", "icon": "pray", "nodes": [{"id": "wil_g1", "label": "7 Tage Gebet", "req": "7 Tage Morgen & Abendgebet", "xp": 100, "statGain": 1}, {"id": "wil_g2", "label": "14 Tage", "req": "14 Tage Gebet-Streak", "xp": 200, "statGain": 2}, {"id": "wil_g3", "label": "21 Tage", "req": "21 Tage Gebet-Streak", "xp": 300, "statGain": 2}, {"id": "wil_g4", "label": "30 Tage", "req": "30 Tage Gebet-Streak", "xp": 450, "statGain": 3}, {"id": "wil_g5", "label": "60 Tage", "req": "60 Tage Gebet-Streak", "xp": 650, "statGain": 4}, {"id": "wil_g6", "label": "90 Tage", "req": "90 Tage Gebet-Streak", "xp": 900, "statGain": 6}]}, {"name": "Verzicht", "icon": "phone_off", "nodes": [{"id": "wil_v1", "label": "Kein Handy 7 Tage", "req": "7 Tage kein Handy beim Aufwachen", "xp": 100, "statGain": 1}, {"id": "wil_v2", "label": "14 Tage", "req": "14 Tage kein Handy beim Aufwachen", "xp": 200, "statGain": 2}, {"id": "wil_v3", "label": "21 Tage", "req": "21 Tage kein Handy beim Aufwachen", "xp": 300, "statGain": 2}, {"id": "wil_v4", "label": "Kein Social 7 Tage", "req": "7 Tage kein Social Media nach 22:00", "xp": 200, "statGain": 2}, {"id": "wil_v5", "label": "Kein Social 14 Tage", "req": "14 Tage kein Social Media nach 22:00", "xp": 350, "statGain": 3}, {"id": "wil_v6", "label": "Kein Social 30 Tage", "req": "30 Tage kein Social Media nach 22:00", "xp": 600, "statGain": 5}]}, {"name": "Versprechen", "icon": "handshake", "nodes": [{"id": "wil_p1", "label": "7 Tage Wort gehalten", "req": "7 Tage Quest abgehakt", "xp": 100, "statGain": 1}, {"id": "wil_p2", "label": "14 Tage", "req": "14 Tage Wort-Streak", "xp": 200, "statGain": 2}, {"id": "wil_p3", "label": "21 Tage", "req": "21 Tage Wort-Streak", "xp": 300, "statGain": 2}, {"id": "wil_p4", "label": "30 Tage", "req": "30 Tage Wort-Streak", "xp": 450, "statGain": 3}, {"id": "wil_p5", "label": "60 Tage", "req": "60 Tage Wort-Streak", "xp": 650, "statGain": 4}, {"id": "wil_p6", "label": "Dein Wort ist Gesetz", "req": "90 Tage Wort-Streak", "xp": 900, "statGain": 6}]}]}, "VIT": {"name": "Vitalität", "color": "#ec4899", "paths": [{"name": "Supplements", "icon": "pill", "nodes": [{"id": "vit_s1", "label": "7 Tage", "req": "7 Tage alle Supplements genommen", "xp": 100, "statGain": 1}, {"id": "vit_s2", "label": "14 Tage", "req": "14 Tage Supplement-Streak", "xp": 200, "statGain": 2}, {"id": "vit_s3", "label": "21 Tage", "req": "21 Tage Supplement-Streak", "xp": 300, "statGain": 2}, {"id": "vit_s4", "label": "30 Tage", "req": "30 Tage Supplement-Streak", "xp": 450, "statGain": 3}, {"id": "vit_s5", "label": "60 Tage", "req": "60 Tage Supplement-Streak", "xp": 650, "statGain": 4}, {"id": "vit_s6", "label": "90 Tage", "req": "90 Tage Supplement-Streak", "xp": 900, "statGain": 6}]}, {"name": "Wasser", "icon": "droplets", "nodes": [{"id": "vit_w1", "label": "7 Tage 2L", "req": "7 Tage 2L Wasser täglich", "xp": 75, "statGain": 1}, {"id": "vit_w2", "label": "14 Tage 2L", "req": "14 Tage 2L Wasser täglich", "xp": 150, "statGain": 1}, {"id": "vit_w3", "label": "30 Tage 2L", "req": "30 Tage 2L Wasser täglich", "xp": 300, "statGain": 2}, {"id": "vit_w4", "label": "60 Tage 2L", "req": "60 Tage 2L Wasser täglich", "xp": 500, "statGain": 3}]}, {"name": "Schlaf", "icon": "moon", "nodes": [{"id": "vit_sl1", "label": "Vor 24 Uhr 7 Tage", "req": "7 Tage vor 02:00 schlafen", "xp": 100, "statGain": 1}, {"id": "vit_sl2", "label": "14 Tage", "req": "14 Tage vor 02:00 schlafen", "xp": 200, "statGain": 2}, {"id": "vit_sl3", "label": "21 Tage", "req": "21 Tage vor 02:00 schlafen", "xp": 300, "statGain": 2}, {"id": "vit_sl4", "label": "30 Tage", "req": "30 Tage vor 02:00 schlafen", "xp": 450, "statGain": 3}, {"id": "vit_sl5", "label": "7h Schlaf 14 Tage", "req": "14 Tage 7h+ Schlaf", "xp": 400, "statGain": 3}, {"id": "vit_sl6", "label": "7h Schlaf 30 Tage", "req": "30 Tage 7h+ Schlaf", "xp": 700, "statGain": 5}]}]}, "ITG": {"name": "Integrität", "color": "#e2e8f0", "paths": [{"name": "Selbstdisziplin", "icon": "shield", "nodes": [{"id": "itg_s1", "label": "3 Tage Wort gehalten", "req": "3 Tage in Folge eigenes Versprechen gehalten", "xp": 75, "statGain": 1}, {"id": "itg_s2", "label": "7 Tage", "req": "7 Tage in Folge eigenes Versprechen gehalten", "xp": 150, "statGain": 2}, {"id": "itg_s3", "label": "14 Tage", "req": "14 Tage in Folge", "xp": 300, "statGain": 2}, {"id": "itg_s4", "label": "21 Tage", "req": "21 Tage in Folge", "xp": 450, "statGain": 3}, {"id": "itg_s5", "label": "30 Tage", "req": "30 Tage in Folge", "xp": 650, "statGain": 4}, {"id": "itg_s6", "label": "60 Tage", "req": "60 Tage in Folge", "xp": 1000, "statGain": 6}]}, {"name": "Verlässlichkeit", "icon": "handshake", "nodes": [{"id": "itg_v1", "label": "1 Woche", "req": "1 Woche kein gebrochenes Versprechen an andere", "xp": 100, "statGain": 1}, {"id": "itg_v2", "label": "2 Wochen", "req": "2 Wochen kein gebrochenes Versprechen", "xp": 200, "statGain": 2}, {"id": "itg_v3", "label": "1 Monat", "req": "1 Monat Verlässlichkeit", "xp": 400, "statGain": 3}, {"id": "itg_v4", "label": "3 Monate", "req": "3 Monate konsequente Verlässlichkeit", "xp": 700, "statGain": 5}, {"id": "itg_v5", "label": "6 Monate", "req": "6 Monate — du bist bekannt dafür", "xp": 1200, "statGain": 7}]}, {"name": "Charakter", "icon": "shield", "nodes": [{"id": "itg_c1", "label": "7 Tage unbequem", "req": "7 Tage Unbequemes getan", "xp": 100, "statGain": 1}, {"id": "itg_c2", "label": "14 Tage", "req": "14 Tage Routine wenn niemand zuschaut", "xp": 200, "statGain": 2}, {"id": "itg_c3", "label": "21 Tage ehrlich", "req": "21 Tage ehrlicher Review", "xp": 300, "statGain": 2}, {"id": "itg_c4", "label": "30 Tage Konsistenz", "req": "30 Tage alles zusammen", "xp": 450, "statGain": 3}, {"id": "itg_c5", "label": "60 Tage", "req": "60 Tage Charakter", "xp": 650, "statGain": 4}, {"id": "itg_c6", "label": "Wer du bist wenn niemand zuschaut", "req": "90 Tage", "xp": 900, "statGain": 6}]}]}, "WLT": {"name": "Wohlstand", "color": "#fde68a", "paths": [{"name": "Sparen", "icon": "coins", "nodes": [{"id": "wlt_s1", "label": "Notgroschen", "req": "1 Monatsgehalt als Notgroschen gespart", "xp": 300, "statGain": 2}, {"id": "wlt_s2", "label": "3 Monate", "req": "3 Monatsgehälter gespart", "xp": 500, "statGain": 3}, {"id": "wlt_s3", "label": "6 Monate", "req": "6 Monatsgehälter gespart", "xp": 800, "statGain": 5}]}, {"name": "Investieren", "icon": "trending_up", "nodes": [{"id": "wlt_i1", "label": "Erste Investition", "req": "Erste Investition getätigt (ETF, Crypto etc.)", "xp": 200, "statGain": 2}, {"id": "wlt_i2", "label": "Monatlich investieren", "req": "3 Monate monatlich investiert", "xp": 400, "statGain": 3}, {"id": "wlt_i3", "label": "Portfolio aufgebaut", "req": "Diversifiziertes Portfolio steht", "xp": 700, "statGain": 5}, {"id": "wlt_i4", "label": "Passives Einkommen", "req": "Erste passive Einnahmen generiert", "xp": 1000, "statGain": 7}]}, {"name": "OFM Skalierung", "icon": "trending_up", "nodes": [{"id": "wlt_o1", "label": "1.000€/Monat", "req": "1.000€ Monatsumsatz OFM", "xp": 300, "statGain": 2}, {"id": "wlt_o2", "label": "5.000€/Monat", "req": "5.000€ Monatsumsatz", "xp": 600, "statGain": 4}, {"id": "wlt_o3", "label": "10.000€/Monat", "req": "10.000€ Monatsumsatz", "xp": 1000, "statGain": 6}, {"id": "wlt_o4", "label": "50.000€/Monat", "req": "50.000€ Monatsumsatz", "xp": 2000, "statGain": 10}]}]}, "KLR": {"name": "Klarheit", "color": "#6ee7b7", "paths": [{"name": "Gebet & Stille", "icon": "pray", "nodes": [{"id": "klr_g1", "label": "7 Tage", "req": "7 Tage Morgen- & Abendgebet + 5 Min Stille", "xp": 100, "statGain": 1}, {"id": "klr_g2", "label": "14 Tage", "req": "14 Tage Streak", "xp": 200, "statGain": 2}, {"id": "klr_g3", "label": "30 Tage", "req": "30 Tage Streak", "xp": 400, "statGain": 3}, {"id": "klr_g4", "label": "60 Tage", "req": "60 Tage Streak", "xp": 700, "statGain": 5}]}, {"name": "Reflexion", "icon": "note", "nodes": [{"id": "klr_r1", "label": "7 Tage Review", "req": "7 Tage Abend-Review gemacht", "xp": 100, "statGain": 1}, {"id": "klr_r2", "label": "14 Tage", "req": "14 Tage Abend-Review", "xp": 200, "statGain": 2}, {"id": "klr_r3", "label": "30 Tage", "req": "30 Tage Abend-Review", "xp": 350, "statGain": 3}, {"id": "klr_r4", "label": "Digitaler Detox", "req": "Ersten ganzen Tag ohne Social Media", "xp": 300, "statGain": 2}, {"id": "klr_r5", "label": "Wöchentlicher Detox", "req": "4 Wochen je 1 Tag ohne Social Media", "xp": 600, "statGain": 4}]}, {"name": "Vision", "icon": "explore", "nodes": [{"id": "klr_v1", "label": "Vision Board", "req": "Vision Board erstellt", "xp": 150, "statGain": 1}, {"id": "klr_v2", "label": "Jahresziele", "req": "Top 3 Jahresziele schriftlich", "xp": 200, "statGain": 2}, {"id": "klr_v3", "label": "5 Jahres-Plan", "req": "5 Jahres-Plan schriftlich", "xp": 300, "statGain": 2}, {"id": "klr_v4", "label": "4 Wochen Review", "req": "4 Wochen Ziel-Review", "xp": 400, "statGain": 3}, {"id": "klr_v5", "label": "3 Monate Review", "req": "3 Monate Ziel-Review", "xp": 600, "statGain": 4}, {"id": "klr_v6", "label": "Vision wird Realität", "req": "3 große Ziele erreicht", "xp": 1000, "statGain": 6}]}]}, "DIS": {"name": "Disziplin", "color": "#22c55e", "paths": [{"name": "Daily Quests", "icon": "checklist", "nodes": [{"id": "dis_d1", "label": "3 Tage 100%", "req": "3 Tage alle Daily Quests erledigt", "xp": 75, "statGain": 1}, {"id": "dis_d2", "label": "7 Tage 100%", "req": "7 Tage alle Daily Quests erledigt", "xp": 150, "statGain": 2}, {"id": "dis_d3", "label": "14 Tage 100%", "req": "14 Tage alle Daily Quests erledigt", "xp": 300, "statGain": 2}, {"id": "dis_d4", "label": "21 Tage 100%", "req": "21 Tage alle Daily Quests erledigt", "xp": 450, "statGain": 3}, {"id": "dis_d5", "label": "30 Tage 100%", "req": "30 Tage alle Daily Quests erledigt", "xp": 650, "statGain": 4}, {"id": "dis_d6", "label": "60 Tage 100%", "req": "60 Tage alle Daily Quests erledigt", "xp": 1000, "statGain": 6}]}, {"name": "Habits", "icon": "flame", "nodes": [{"id": "dis_h1", "label": "7 Tage alle Habits", "req": "7 Tage alle Habits erfüllt", "xp": 150, "statGain": 1}, {"id": "dis_h2", "label": "14 Tage", "req": "14 Tage alle Habits erfüllt", "xp": 300, "statGain": 2}, {"id": "dis_h3", "label": "21 Tage", "req": "21 Tage alle Habits erfüllt", "xp": 450, "statGain": 3}, {"id": "dis_h4", "label": "30 Tage", "req": "30 Tage alle Habits erfüllt", "xp": 600, "statGain": 4}, {"id": "dis_h5", "label": "60 Tage Streak", "req": "60 Tage Habit-Streak", "xp": 900, "statGain": 5}, {"id": "dis_h6", "label": "90 Tage Streak", "req": "90 Tage Habit-Streak", "xp": 1500, "statGain": 7}]}, {"name": "Routine", "icon": "wb_sunny", "nodes": [{"id": "dis_r1", "label": "Morgenroutine 7 Tage", "req": "7 Tage Morgenroutine", "xp": 100, "statGain": 1}, {"id": "dis_r2", "label": "Morgenroutine 14 Tage", "req": "14 Tage Streak", "xp": 200, "statGain": 2}, {"id": "dis_r3", "label": "Morgenroutine 30 Tage", "req": "30 Tage Streak", "xp": 400, "statGain": 3}, {"id": "dis_r4", "label": "Abendroutine 7 Tage", "req": "7 Tage Abendroutine", "xp": 150, "statGain": 1}, {"id": "dis_r5", "label": "Abendroutine 14 Tage", "req": "14 Tage Streak", "xp": 250, "statGain": 2}, {"id": "dis_r6", "label": "Beide 30 Tage", "req": "Beide Routinen 30 Tage", "xp": 700, "statGain": 5}]}]}};
+const SKILL_TREE ={"STR": {"name": "Stärke", "color": "#ef4444", "paths": [{"name": "Kraft", "icon": "dumbbell", "nodes": [{"id": "str_k1", "label": "30 Wdh. × 7 Tage", "req": "7 Tage täglich 30 Liegestütze, Kniebeugen & Situps", "xp": 100, "statGain": 1, "autoTrack": "workoutStreak", "autoTarget": 7}, {"id": "str_k2", "label": "40 Wdh. × 7 Tage", "req": "7 Tage täglich 40 Wdh. jeder Übung", "xp": 150, "statGain": 1, "autoTrack": "workoutStreak", "autoTarget": 14}, {"id": "str_k3", "label": "50 Wdh. × 7 Tage", "req": "7 Tage täglich 50 Wdh.", "xp": 200, "statGain": 2, "autoTrack": "workoutStreak", "autoTarget": 21}, {"id": "str_k4", "label": "60 Wdh. × 7 Tage", "req": "7 Tage täglich 60 Wdh.", "xp": 250, "statGain": 2, "autoTrack": "workoutStreak", "autoTarget": 28}, {"id": "str_k5", "label": "70 Wdh. × 7 Tage", "req": "7 Tage täglich 70 Wdh.", "xp": 350, "statGain": 3, "autoTrack": "workoutStreak", "autoTarget": 35}, {"id": "str_k6", "label": "80 Wdh. × 7 Tage", "req": "7 Tage täglich 80 Wdh.", "xp": 450, "statGain": 3, "autoTrack": "workoutStreak", "autoTarget": 42}, {"id": "str_k7", "label": "90 Wdh. × 7 Tage 🏆", "req": "7 Tage täglich 90 Wdh. jeder Übung", "xp": 600, "statGain": 5, "autoTrack": "workoutStreak", "autoTarget": 49}]}, {"name": "Ausdauer", "icon": "run", "nodes": [{"id": "str_a1", "label": "1× Sport/Woche", "req": "1× Sport diese Woche", "xp": 50, "statGain": 1}, {"id": "str_a2", "label": "3× Sport/Woche", "req": "3× Sport in einer Woche", "xp": 100, "statGain": 1}, {"id": "str_a3", "label": "5× Sport/Woche", "req": "5× Sport in einer Woche", "xp": 150, "statGain": 2}, {"id": "str_a4", "label": "10 Tage Streak", "req": "10 Tage Workout-Streak", "xp": 250, "statGain": 2}, {"id": "str_a5", "label": "21 Tage Streak", "req": "21 Tage Workout-Streak", "xp": 400, "statGain": 3}, {"id": "str_a6", "label": "30 Tage Streak", "req": "30 Tage Workout-Streak", "xp": 600, "statGain": 5}]}, {"name": "Mobilität", "icon": "self_improvement", "nodes": [{"id": "str_m1", "label": "7 Tage Streak", "req": "7 Tage Stretching täglich", "xp": 75, "statGain": 1, "autoTrack": "morningStreak", "autoTarget": 7}, {"id": "str_m2", "label": "14 Tage Streak", "req": "14 Tage Stretching täglich", "xp": 150, "statGain": 1, "autoTrack": "morningStreak", "autoTarget": 14}, {"id": "str_m3", "label": "21 Tage Streak", "req": "21 Tage Stretching täglich", "xp": 250, "statGain": 2, "autoTrack": "morningStreak", "autoTarget": 21}, {"id": "str_m4", "label": "30 Tage Streak", "req": "30 Tage Stretching täglich", "xp": 350, "statGain": 2, "autoTrack": "morningStreak", "autoTarget": 30}, {"id": "str_m5", "label": "60 Tage Streak", "req": "60 Tage Stretching täglich", "xp": 500, "statGain": 3, "autoTrack": "morningStreak", "autoTarget": 60}, {"id": "str_m6", "label": "90 Tage Streak 🏆", "req": "90 Tage Stretching täglich", "xp": 750, "statGain": 4, "autoTrack": "morningStreak", "autoTarget": 90}]}]}, "INT": {"name": "Intelligenz", "color": "#4f8ef7", "paths": [{"name": "Lesen", "icon": "book_open", "nodes": [{"id": "int_l1", "label": "10 Seiten/Tag", "req": "10 Seiten täglich lesen", "xp": 50, "statGain": 1}, {"id": "int_l2", "label": "Buch 1 fertig", "req": "Ego is the Enemy abgeschlossen", "xp": 200, "statGain": 2}, {"id": "int_l3", "label": "Buch 2 fertig", "req": "Ikigai abgeschlossen", "xp": 200, "statGain": 2}, {"id": "int_l4", "label": "Buch 3 fertig", "req": "Stoic Path to Wealth abgeschlossen", "xp": 250, "statGain": 2}, {"id": "int_l5", "label": "5 Bücher fertig", "req": "5 Bücher insgesamt abgeschlossen", "xp": 400, "statGain": 3}, {"id": "int_l6", "label": "Alle 7 Bücher", "req": "Alle 7 Bücher abgeschlossen", "xp": 700, "statGain": 5}]}, {"name": "Spanisch", "icon": "globe", "nodes": [{"id": "int_s1", "label": "3 Lektionen", "req": "3 Spanisch-Lektionen gemacht", "xp": 50, "statGain": 1}, {"id": "int_s2", "label": "7 Tage Streak", "req": "7 Tage Spanisch-Streak", "xp": 100, "statGain": 1}, {"id": "int_s3", "label": "14 Tage Streak", "req": "14 Tage Spanisch-Streak", "xp": 200, "statGain": 2}, {"id": "int_s4", "label": "A1 Niveau", "req": "Spanisch A1 erreicht", "xp": 350, "statGain": 3}, {"id": "int_s5", "label": "Erste Konversation", "req": "Erste Spanisch-Konversation geführt", "xp": 500, "statGain": 4}, {"id": "int_s6", "label": "A2 Niveau", "req": "Spanisch A2 erreicht", "xp": 700, "statGain": 5}]}, {"name": "Finanzen", "icon": "trending_up", "nodes": [{"id": "int_f1", "label": "Haushaltsbuch 7 Tage", "req": "7 Tage Ausgaben notiert", "xp": 75, "statGain": 1}, {"id": "int_f2", "label": "Haushaltsbuch 30 Tage", "req": "30 Tage Ausgaben notiert", "xp": 200, "statGain": 2}, {"id": "int_f3", "label": "Erstes Budget", "req": "Monatliches Budget erstellt", "xp": 150, "statGain": 1}, {"id": "int_f4", "label": "1 Monat im Budget", "req": "1 Monat im Budget", "xp": 300, "statGain": 2}, {"id": "int_f5", "label": "3 Monate im Budget", "req": "3 Monate im Budget", "xp": 500, "statGain": 3}, {"id": "int_f6", "label": "1.000 Euro angespart", "req": "Notgroschen aufgebaut", "xp": 700, "statGain": 5}]}]}, "PRD": {"name": "Produktivität", "color": "#f5c542", "paths": [{"name": "Fans", "icon": "users", "nodes": [{"id": "prd_f1", "label": "10 Fans", "req": "10 aktive Fans auf OF", "xp": 100, "statGain": 1}, {"id": "prd_f2", "label": "25 Fans", "req": "25 aktive Fans", "xp": 150, "statGain": 1}, {"id": "prd_f3", "label": "50 Fans", "req": "50 aktive Fans", "xp": 250, "statGain": 2}, {"id": "prd_f4", "label": "100 Fans", "req": "100 aktive Fans", "xp": 400, "statGain": 3}, {"id": "prd_f5", "label": "250 Fans", "req": "250 aktive Fans", "xp": 600, "statGain": 4}, {"id": "prd_f6", "label": "500 Fans", "req": "500 aktive Fans", "xp": 800, "statGain": 5}]}, {"name": "Umsatz", "icon": "coins", "nodes": [{"id": "prd_u1", "label": "100€", "req": "Erste 100€ Umsatz", "xp": 150, "statGain": 1}, {"id": "prd_u2", "label": "500€", "req": "500€ Monatsumsatz", "xp": 300, "statGain": 2}, {"id": "prd_u3", "label": "1.000€", "req": "1.000€ Monatsumsatz", "xp": 500, "statGain": 3}, {"id": "prd_u4", "label": "2.500€", "req": "2.500€ Monatsumsatz", "xp": 700, "statGain": 4}, {"id": "prd_u5", "label": "5.000€", "req": "5.000€ Monatsumsatz", "xp": 1000, "statGain": 5}, {"id": "prd_u6", "label": "10.000€", "req": "10.000€ Monatsumsatz", "xp": 1500, "statGain": 7}]}, {"name": "Skalierung", "icon": "trending_up", "nodes": [{"id": "prd_s1", "label": "Model 1 live", "req": "Model 1 vollständig live", "xp": 200, "statGain": 2}, {"id": "prd_s2", "label": "Erstes Worksheet", "req": "Erstes Worksheet rausgeschickt", "xp": 150, "statGain": 1}, {"id": "prd_s3", "label": "Model 2 live", "req": "Model 2 onboarded & live", "xp": 400, "statGain": 3}, {"id": "prd_s4", "label": "Texter eingestellt", "req": "Erster Texter eingearbeitet", "xp": 600, "statGain": 4}, {"id": "prd_s5", "label": "3 Models aktiv", "req": "3 Models gleichzeitig aktiv", "xp": 800, "statGain": 5}, {"id": "prd_s6", "label": "Agency Status", "req": "5+ Models, Team läuft selbstständig", "xp": 1500, "statGain": 8}]}]}, "WIL": {"name": "Willenskraft", "color": "#a855f7", "paths": [{"name": "Bibel & Gebet", "icon": "book_open", "nodes": [{"id": "wil_g1", "label": "7 Tage Gebet", "req": "7 Tage Bibel gelesen & gebetet", "xp": 100, "statGain": 1}, {"id": "wil_g2", "label": "14 Tage", "req": "14 Tage Bibel gelesen & gebetet-Streak", "xp": 200, "statGain": 2}, {"id": "wil_g3", "label": "21 Tage", "req": "21 Tage Bibel gelesen & gebetet-Streak", "xp": 300, "statGain": 2}, {"id": "wil_g4", "label": "30 Tage", "req": "30 Tage Bibel gelesen & gebetet-Streak", "xp": 450, "statGain": 3}, {"id": "wil_g5", "label": "60 Tage", "req": "60 Tage Bibel gelesen & gebetet-Streak", "xp": 650, "statGain": 4}, {"id": "wil_g6", "label": "90 Tage", "req": "90 Tage Bibel gelesen & gebetet-Streak", "xp": 900, "statGain": 6}]}, {"name": "Fokus", "icon": "timer_off", "nodes": [{"id": "wil_f1", "label": "Social Media 7 Tage <1h", "req": "7 Tage Social Media unter 1h täglich", "xp": 100, "statGain": 1}, {"id": "wil_f2", "label": "Social Media 14 Tage", "req": "14 Tage Social Media unter 1h täglich", "xp": 200, "statGain": 2}, {"id": "wil_f3", "label": "Social Media 30 Tage", "req": "30 Tage Social Media unter 1h täglich", "xp": 350, "statGain": 2}, {"id": "wil_f4", "label": "Spielen 7 Tage <2h", "req": "7 Tage Spielzeit unter 2h täglich", "xp": 100, "statGain": 1}, {"id": "wil_f5", "label": "Spielen 14 Tage", "req": "14 Tage Spielzeit unter 2h täglich", "xp": 200, "statGain": 2}, {"id": "wil_f6", "label": "Spielen 30 Tage", "req": "30 Tage Spielzeit unter 2h täglich", "xp": 350, "statGain": 3}]}, {"name": "Versprechen", "icon": "handshake", "nodes": [{"id": "wil_p1", "label": "7 Tage Wort gehalten", "req": "7 Tage Quest abgehakt", "xp": 100, "statGain": 1}, {"id": "wil_p2", "label": "14 Tage", "req": "14 Tage Wort-Streak", "xp": 200, "statGain": 2}, {"id": "wil_p3", "label": "21 Tage", "req": "21 Tage Wort-Streak", "xp": 300, "statGain": 2}, {"id": "wil_p4", "label": "30 Tage", "req": "30 Tage Wort-Streak", "xp": 450, "statGain": 3}, {"id": "wil_p5", "label": "60 Tage", "req": "60 Tage Wort-Streak", "xp": 650, "statGain": 4}, {"id": "wil_p6", "label": "Dein Wort ist Gesetz", "req": "90 Tage Wort-Streak", "xp": 900, "statGain": 6}]}]}, "VIT": {"name": "Vitalität", "color": "#ec4899", "paths": [{"name": "Supplements", "icon": "pill", "nodes": [{"id": "vit_s1", "label": "7 Tage", "req": "7 Tage alle Supplements genommen", "xp": 100, "statGain": 1}, {"id": "vit_s2", "label": "14 Tage", "req": "14 Tage Supplement-Streak", "xp": 200, "statGain": 2}, {"id": "vit_s3", "label": "21 Tage", "req": "21 Tage Supplement-Streak", "xp": 300, "statGain": 2}, {"id": "vit_s4", "label": "30 Tage", "req": "30 Tage Supplement-Streak", "xp": 450, "statGain": 3}, {"id": "vit_s5", "label": "60 Tage", "req": "60 Tage Supplement-Streak", "xp": 650, "statGain": 4}, {"id": "vit_s6", "label": "90 Tage", "req": "90 Tage Supplement-Streak", "xp": 900, "statGain": 6}]}, {"name": "Wasser", "icon": "droplets", "nodes": [{"id": "vit_w1", "label": "7 Tage 2L", "req": "7 Tage 2L Wasser täglich", "xp": 75, "statGain": 1}, {"id": "vit_w2", "label": "14 Tage 2L", "req": "14 Tage 2L Wasser täglich", "xp": 150, "statGain": 1}, {"id": "vit_w3", "label": "30 Tage 2L", "req": "30 Tage 2L Wasser täglich", "xp": 300, "statGain": 2}, {"id": "vit_w4", "label": "60 Tage 2L", "req": "60 Tage 2L Wasser täglich", "xp": 500, "statGain": 3}]}, {"name": "Schlaf", "icon": "moon", "nodes": [{"id": "vit_sl1", "label": "Vor 24 Uhr 7 Tage", "req": "7 Tage vor 02:00 schlafen", "xp": 100, "statGain": 1}, {"id": "vit_sl2", "label": "14 Tage", "req": "14 Tage vor 02:00 schlafen", "xp": 200, "statGain": 2}, {"id": "vit_sl3", "label": "21 Tage", "req": "21 Tage vor 02:00 schlafen", "xp": 300, "statGain": 2}, {"id": "vit_sl4", "label": "30 Tage", "req": "30 Tage vor 02:00 schlafen", "xp": 450, "statGain": 3}, {"id": "vit_sl5", "label": "7h Schlaf 14 Tage", "req": "14 Tage 7h+ Schlaf", "xp": 400, "statGain": 3}, {"id": "vit_sl6", "label": "7h Schlaf 30 Tage", "req": "30 Tage 7h+ Schlaf", "xp": 700, "statGain": 5}]}]}, "ITG": {"name": "Integrität", "color": "#e2e8f0", "paths": [{"name": "Selbstdisziplin", "icon": "shield", "nodes": [{"id": "itg_s1", "label": "3 Tage Wort gehalten", "req": "3 Tage in Folge eigenes Versprechen gehalten", "xp": 75, "statGain": 1}, {"id": "itg_s2", "label": "7 Tage", "req": "7 Tage in Folge eigenes Versprechen gehalten", "xp": 150, "statGain": 2}, {"id": "itg_s3", "label": "14 Tage", "req": "14 Tage in Folge", "xp": 300, "statGain": 2}, {"id": "itg_s4", "label": "21 Tage", "req": "21 Tage in Folge", "xp": 450, "statGain": 3}, {"id": "itg_s5", "label": "30 Tage", "req": "30 Tage in Folge", "xp": 650, "statGain": 4}, {"id": "itg_s6", "label": "60 Tage", "req": "60 Tage in Folge", "xp": 1000, "statGain": 6}]}, {"name": "Verlässlichkeit", "icon": "handshake", "nodes": [{"id": "itg_v1", "label": "1 Woche", "req": "1 Woche kein gebrochenes Versprechen an andere", "xp": 100, "statGain": 1, "autoTrack": "weeklyReliability", "autoTarget": 1}, {"id": "itg_v2", "label": "2 Wochen", "req": "2 Wochen kein gebrochenes Versprechen", "xp": 200, "statGain": 2, "autoTrack": "weeklyReliability", "autoTarget": 2}, {"id": "itg_v3", "label": "1 Monat", "req": "1 Monat Verlässlichkeit", "xp": 400, "statGain": 3, "autoTrack": "weeklyReliability", "autoTarget": 4}, {"id": "itg_v4", "label": "3 Monate", "req": "3 Monate konsequente Verlässlichkeit", "xp": 700, "statGain": 5, "autoTrack": "weeklyReliability", "autoTarget": 12}, {"id": "itg_v5", "label": "6 Monate", "req": "6 Monate — du bist bekannt dafür", "xp": 1200, "statGain": 7, "autoTrack": "weeklyReliability", "autoTarget": 24}]}, {"name": "Charakter", "icon": "shield", "nodes": [{"id": "itg_c1", "label": "7 Tage unbequem", "req": "7 Tage Unbequemes getan", "xp": 100, "statGain": 1}, {"id": "itg_c2", "label": "14 Tage", "req": "14 Tage Routine wenn niemand zuschaut", "xp": 200, "statGain": 2}, {"id": "itg_c3", "label": "21 Tage ehrlich", "req": "21 Tage ehrlicher Review", "xp": 300, "statGain": 2}, {"id": "itg_c4", "label": "30 Tage Konsistenz", "req": "30 Tage alles zusammen", "xp": 450, "statGain": 3}, {"id": "itg_c5", "label": "60 Tage", "req": "60 Tage Charakter", "xp": 650, "statGain": 4}, {"id": "itg_c6", "label": "Wer du bist wenn niemand zuschaut", "req": "90 Tage", "xp": 900, "statGain": 6}]}]}, "WLT": {"name": "Wohlstand", "color": "#fde68a", "paths": [{"name": "Sparen", "icon": "coins", "nodes": [{"id": "wlt_s1", "label": "500€ gespart", "req": "500€ auf dem Sparkonto", "xp": 200, "statGain": 1, "savingsTarget": 500}, {"id": "wlt_s2", "label": "2.000€ gespart", "req": "2.000€ auf dem Sparkonto", "xp": 350, "statGain": 2, "savingsTarget": 2000}, {"id": "wlt_s3", "label": "5.000€ gespart", "req": "5.000€ auf dem Sparkonto", "xp": 600, "statGain": 3, "savingsTarget": 5000}, {"id": "wlt_s4", "label": "10.000€ gespart", "req": "10.000€ auf dem Sparkonto", "xp": 900, "statGain": 5, "savingsTarget": 10000}, {"id": "wlt_s5", "label": "20.000€ gespart", "req": "20.000€ auf dem Sparkonto", "xp": 1500, "statGain": 7, "savingsTarget": 20000}]}, {"name": "Investieren", "icon": "trending_up", "nodes": [{"id": "wlt_i1", "label": "Erste Investition", "req": "Erste Investition getätigt", "xp": 200, "statGain": 1, "investTarget": 1}, {"id": "wlt_i2", "label": "500€ investiert", "req": "500€ Gesamtinvestition", "xp": 300, "statGain": 2, "investTarget": 500}, {"id": "wlt_i3", "label": "2 Positionen", "req": "2 verschiedene Positionen im Portfolio", "xp": 250, "statGain": 1, "portfolioTarget": 2}, {"id": "wlt_i4", "label": "2.000€ investiert", "req": "2.000€ Gesamtinvestition", "xp": 500, "statGain": 3, "investTarget": 2000}, {"id": "wlt_i5", "label": "5 Positionen", "req": "5 Positionen/ETFs im Portfolio", "xp": 400, "statGain": 2, "portfolioTarget": 5}, {"id": "wlt_i6", "label": "10.000€ investiert", "req": "10.000€ Gesamtinvestition", "xp": 1000, "statGain": 5, "investTarget": 10000}]}, {"name": "OFM Skalierung", "icon": "trending_up", "nodes": [{"id": "wlt_o1", "label": "1.000€/Monat", "req": "1.000€ Monatsumsatz OFM", "xp": 300, "statGain": 2}, {"id": "wlt_o2", "label": "5.000€/Monat", "req": "5.000€ Monatsumsatz", "xp": 600, "statGain": 4}, {"id": "wlt_o3", "label": "10.000€/Monat", "req": "10.000€ Monatsumsatz", "xp": 1000, "statGain": 6}, {"id": "wlt_o4", "label": "50.000€/Monat", "req": "50.000€ Monatsumsatz", "xp": 2000, "statGain": 10}]}]}, "KLR": {"name": "Klarheit", "color": "#6ee7b7", "paths": [{"name": "Gebet & Stille", "icon": "pray", "nodes": [{"id": "klr_g1", "label": "7 Tage", "req": "7 Tage Morgen- & Abendgebet + 5 Min Stille", "xp": 100, "statGain": 1}, {"id": "klr_g2", "label": "14 Tage", "req": "14 Tage Streak", "xp": 200, "statGain": 2}, {"id": "klr_g3", "label": "30 Tage", "req": "30 Tage Streak", "xp": 400, "statGain": 3}, {"id": "klr_g4", "label": "60 Tage", "req": "60 Tage Streak", "xp": 700, "statGain": 5}]}, {"name": "Reflexion", "icon": "note", "nodes": [{"id": "klr_r1", "label": "7 Tage Review", "req": "7 Tage Abend-Review gemacht", "xp": 100, "statGain": 1}, {"id": "klr_r2", "label": "14 Tage", "req": "14 Tage Abend-Review", "xp": 200, "statGain": 2}, {"id": "klr_r3", "label": "30 Tage", "req": "30 Tage Abend-Review", "xp": 350, "statGain": 3}, {"id": "klr_r4", "label": "Digitaler Detox", "req": "Ersten ganzen Tag ohne Social Media", "xp": 300, "statGain": 2}, {"id": "klr_r5", "label": "Wöchentlicher Detox", "req": "4 Wochen je 1 Tag ohne Social Media", "xp": 600, "statGain": 4}]}, {"name": "Vision", "icon": "explore", "nodes": [{"id": "klr_v1", "label": "Vision Board", "req": "Vision Board erstellt", "xp": 150, "statGain": 1, "projectId": 500}, {"id": "klr_v2", "label": "Jahresziele", "req": "Top 3 Jahresziele schriftlich", "xp": 200, "statGain": 2, "projectId": 501}, {"id": "klr_v3", "label": "5 Jahres-Plan", "req": "5 Jahres-Plan schriftlich", "xp": 300, "statGain": 2, "projectId": 502}, {"id": "klr_v4", "label": "4 Wochen Review", "req": "4 Wochen Ziel-Review", "xp": 400, "statGain": 3}, {"id": "klr_v5", "label": "3 Monate Review", "req": "3 Monate Ziel-Review", "xp": 600, "statGain": 4}, {"id": "klr_v6", "label": "Vision wird Realität", "req": "3 große Ziele erreicht", "xp": 1000, "statGain": 6}]}]}, "DIS": {"name": "Disziplin", "color": "#22c55e", "paths": [{"name": "Daily Quests", "icon": "checklist", "nodes": [{"id": "dis_d1", "label": "3 Tage 100%", "req": "3 Tage alle Daily Quests erledigt", "xp": 75, "statGain": 1}, {"id": "dis_d2", "label": "7 Tage 100%", "req": "7 Tage alle Daily Quests erledigt", "xp": 150, "statGain": 2}, {"id": "dis_d3", "label": "14 Tage 100%", "req": "14 Tage alle Daily Quests erledigt", "xp": 300, "statGain": 2}, {"id": "dis_d4", "label": "21 Tage 100%", "req": "21 Tage alle Daily Quests erledigt", "xp": 450, "statGain": 3}, {"id": "dis_d5", "label": "30 Tage 100%", "req": "30 Tage alle Daily Quests erledigt", "xp": 650, "statGain": 4}, {"id": "dis_d6", "label": "60 Tage 100%", "req": "60 Tage alle Daily Quests erledigt", "xp": 1000, "statGain": 6}]}, {"name": "Habits", "icon": "flame", "nodes": [{"id": "dis_h1", "label": "7 Tage alle Habits", "req": "7 Tage alle Habits erfüllt", "xp": 150, "statGain": 1}, {"id": "dis_h2", "label": "14 Tage", "req": "14 Tage alle Habits erfüllt", "xp": 300, "statGain": 2}, {"id": "dis_h3", "label": "21 Tage", "req": "21 Tage alle Habits erfüllt", "xp": 450, "statGain": 3}, {"id": "dis_h4", "label": "30 Tage", "req": "30 Tage alle Habits erfüllt", "xp": 600, "statGain": 4}, {"id": "dis_h5", "label": "60 Tage Streak", "req": "60 Tage Habit-Streak", "xp": 900, "statGain": 5}, {"id": "dis_h6", "label": "90 Tage Streak", "req": "90 Tage Habit-Streak", "xp": 1500, "statGain": 7}]}, {"name": "Routine", "icon": "wb_sunny", "nodes": [{"id": "dis_r1", "label": "Morgenroutine 7 Tage", "req": "7 Tage Morgenroutine", "xp": 100, "statGain": 1}, {"id": "dis_r2", "label": "Morgenroutine 14 Tage", "req": "14 Tage Streak", "xp": 200, "statGain": 2}, {"id": "dis_r3", "label": "Morgenroutine 30 Tage", "req": "30 Tage Streak", "xp": 400, "statGain": 3}, {"id": "dis_r4", "label": "Abendroutine 7 Tage", "req": "7 Tage Abendroutine", "xp": 150, "statGain": 1}, {"id": "dis_r5", "label": "Abendroutine 14 Tage", "req": "14 Tage Streak", "xp": 250, "statGain": 2}, {"id": "dis_r6", "label": "Beide 30 Tage", "req": "Beide Routinen 30 Tage", "xp": 700, "statGain": 5}]}]}};
 
 // State for skill tree navigation
 let skillView = 'main'; // 'main' | 'paths' | 'steps'
@@ -2759,11 +2988,12 @@ function expandStat(key, nx, ny) {
   activeStatKey = key; skillView = 'paths';
   const skill = SKILL_TREE[key]; const color = skill.color; const paths = skill.paths;
   document.getElementById('skill-back-btn').style.display = 'block';
+  document.getElementById('hub-lines-svg').style.display = 'none';
   document.getElementById('skill-breadcrumb').textContent = skill.name;
   document.querySelectorAll('.stat-node').forEach(n => { n.style.opacity='0'; n.style.pointerEvents='none'; });
   document.getElementById('skill-hub').style.opacity = '0';
   document.querySelectorAll('#skill-svg line').forEach(l => l.style.opacity='0');
-  document.querySelectorAll('.skill-line').forEach(l => l.style.opacity='0');
+  document.querySelectorAll('.hub-line').forEach(l => l.style.opacity='0');
   const dynLayer = document.getElementById('dynamic-nodes-layer');
   dynLayer.innerHTML = '';
   dynLayer.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;pointer-events:none;z-index:10';
@@ -2808,11 +3038,11 @@ function expandPath(statKey, pathIdx, px, py) {
   const dynLayer = document.getElementById('dynamic-nodes-layer');
 
   // All positions calculated in SVG viewBox coordinates (0 0 400 500)
-  const nodeR = 20;
-  const offsetX = 55;
+  const nodeR = 16;
+  const offsetX = 44;
   const cx = 200;
-  const startY = 155;
-  const gap = 58;
+  const startY = 110;
+  const gap = 48;
 
   const pos = path.nodes.map((_, i) => ({
     x: cx + (i % 2 === 0 ? -offsetX : offsetX),
@@ -2824,45 +3054,66 @@ function expandPath(statKey, pathIdx, px, py) {
     if (i === 0) return;
     const x1 = pos[i-1].x, y1 = pos[i-1].y;
     const x2 = pos[i].x,   y2 = pos[i].y;
-    const c = getSkillProgress(path.nodes[i-1].id) ? '#22c55e' : '#3c494e';
+    const c = getSkillProgress(path.nodes[i-1].id) ? color : '#3c494e';
     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('x1', x1); line.setAttribute('y1', y1);
     line.setAttribute('x2', x2); line.setAttribute('y2', y2);
     line.setAttribute('class','dyn-line');
-    line.style.cssText = 'stroke:'+c+';stroke-width:1.5;stroke-dasharray:35,70;animation:mana-flow 45s linear infinite;filter:drop-shadow(0 0 3px '+c+')';
+    line.style.cssText = 'stroke:'+c+';stroke-width:1.5;stroke-dasharray:60,50;animation:mana-flow 45s linear infinite';
     svgEl.appendChild(line);
   });
 
-  // Draw nodes as SVG circles + foreignObject for labels
+  // Draw a cover circle (same background) over each line endpoint BEFORE drawing nodes
+  // This ensures lines don't bleed over node circles
+  const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg','g');
+  nodeGroup.setAttribute('class','dyn-line');
+  svgEl.appendChild(nodeGroup);
+
+  // Draw nodes as SVG circles + icons (all in nodeGroup, above lines)
   path.nodes.forEach((node, i) => {
     const nx = pos[i].x, ny = pos[i].y;
     const unlocked = getSkillProgress(node.id);
     const prevUnlocked = i === 0 || getSkillProgress(path.nodes[i-1].id);
     const canUnlock = !unlocked && prevUnlocked;
-    const bc = unlocked ? '#22c55e' : canUnlock ? color : '#3c494e';
-    const bg = unlocked ? 'rgba(34,197,94,0.15)' : 'rgba(10,10,12,0.95)';
-    const lbl = unlocked ? '✓' : canUnlock ? '!' : '🔒';
+    const isLast = i === path.nodes.length - 1;
+    const shouldPulse = unlocked || canUnlock;
+    const bc = unlocked ? color : canUnlock ? color : '#3c494e';
+    const bg = unlocked ? color + '22' : 'rgba(10,10,12,0.95)';
+
+    // SVG icon paths (all centered at 0,0 for easy transform)
+    const iconPaths = {
+      check: 'M-4,0 L-1.5,3 L4,-3',
+      lock:  'M-3,1 L-3,4 L3,4 L3,1 Q3,-1 0,-1 Q-3,-1 -3,1 M-1.5,-1 L-1.5,-3 Q-1.5,-5 0,-5 Q1.5,-5 1.5,-3 L1.5,-1',
+      star:  'M0,-5 L1.5,-1.5 L5,-1.5 L2,1 L3,5 L0,2.5 L-3,5 L-2,1 L-5,-1.5 L-1.5,-1.5 Z',
+      dot:   'M-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0',
+    };
+
+    // Background circle to cover lines underneath
+    const bgCircle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    bgCircle.setAttribute('cx', nx); bgCircle.setAttribute('cy', ny); bgCircle.setAttribute('r', nodeR + 5);
+    bgCircle.style.cssText = 'fill:#0a0a0c;stroke:none';
+    nodeGroup.appendChild(bgCircle);
 
     // Circle in SVG
     const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
     circle.setAttribute('cx', nx); circle.setAttribute('cy', ny); circle.setAttribute('r', nodeR);
-    circle.setAttribute('class','dyn-line');
-    circle.style.cssText = 'fill:'+bg+';stroke:'+bc+';stroke-width:2;filter:drop-shadow(0 0 8px '+bc+'55)';
+    const pulseAnim = shouldPulse ? `;animation:pulse-glow-el 3s ease-in-out infinite` : '';
+    circle.style.cssText = 'fill:'+bg+';stroke:'+bc+';stroke-width:2;filter:drop-shadow(0 0 8px '+bc+'55)'+pulseAnim;
     if (canUnlock || unlocked) circle.style.cursor = 'pointer';
     circle.addEventListener('click', () => {
       if (canUnlock) showStepPanel(node, statKey, color);
       else if (unlocked) showStepPanel(node, statKey, color, true);
     });
-    svgEl.appendChild(circle);
+    nodeGroup.appendChild(circle);
 
-    // Text inside circle
-    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
-    txt.setAttribute('x', nx); txt.setAttribute('y', ny+5);
-    txt.setAttribute('text-anchor','middle');
-    txt.setAttribute('class','dyn-line');
-    txt.style.cssText = 'fill:'+bc+';font-size:13px;pointer-events:none';
-    txt.textContent = lbl;
-    svgEl.appendChild(txt);
+    // SVG icon inside circle
+    const iconPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+    const d = unlocked ? (isLast ? iconPaths.star : iconPaths.check) : canUnlock ? iconPaths.dot : iconPaths.lock;
+    iconPath.setAttribute('d', d);
+    iconPath.setAttribute('transform', `translate(${nx},${ny})`);
+    iconPath.style.cssText = `fill:none;stroke:${bc};stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;pointer-events:none`;
+    if (unlocked && isLast) iconPath.style.fill = bc + '44';
+    nodeGroup.appendChild(iconPath);
 
     // Label outside circle
     const labelX = nx < cx ? nx - nodeR - 6 : nx + nodeR + 6;
@@ -2871,9 +3122,9 @@ function expandPath(statKey, pathIdx, px, py) {
     labelTxt.setAttribute('x', labelX); labelTxt.setAttribute('y', ny+4);
     labelTxt.setAttribute('text-anchor', anchor);
     labelTxt.setAttribute('class','dyn-line');
-    labelTxt.style.cssText = 'fill:'+bc+';font-size:9px;font-family:JetBrains Mono,monospace;letter-spacing:0.5px';
+    labelTxt.style.cssText = 'fill:'+bc+';font-size:8px;font-family:JetBrains Mono,monospace;letter-spacing:0.5px';
     labelTxt.textContent = node.label;
-    svgEl.appendChild(labelTxt);
+    nodeGroup.appendChild(labelTxt);
   });
 }
 
@@ -2924,6 +3175,7 @@ function collapseSkill() {
     skillView = 'main';
     activeStatKey = null;
     document.getElementById('skill-back-btn').style.display = 'none';
+    document.getElementById('hub-lines-svg').style.display = 'block';
     document.getElementById('skill-breadcrumb').textContent = '';
     document.getElementById('dynamic-nodes-layer').innerHTML = '';
     document.querySelectorAll('.dyn-line').forEach(l => l.remove());
@@ -2960,7 +3212,7 @@ function unlockSkillNode(nodeId, xp, statKey, statGain) {
   if (statKey && statGain) state.stats[statKey] = (state.stats[statKey]||1) + statGain;
   playSound('levelup');
   spawnLevelUpParticles();
-  notify('🔓 ' + nodeId + ' freigeschaltet! +' + xp + ' XP', true);
+  notify(NI.lock + ' ' + nodeId + ' freigeschaltet! +' + xp + ' XP', true);
   closeStepPanel();
   save();
   updateSkillTree();
@@ -2993,7 +3245,7 @@ function deactivateVacation() {
   state.vacation = { active: false, start: null, end: null };
   save();
   updateVacationUI();
-  notify('Urlaubs-Modus beendet. Willkommen zurück! 💪', true);
+  notify(NI.fire + 'Urlaubs-Modus beendet. Willkommen zurück! 💪', true);
 }
 
 function updateVacationUI() {
@@ -3024,7 +3276,7 @@ function updateVacationUI() {
       save();
       statusEl.textContent = 'INAKTIV';
       statusEl.style.cssText = 'background:rgba(255,255,255,0.05);border:none;color:#859398;font-family:JetBrains Mono,monospace;font-size:10px;padding:4px 10px;border-radius:4px';
-      notify('Urlaub beendet — willkommen zurück! 💪', true);
+      notify(NI.fire + 'Urlaub beendet — willkommen zurück! 💪', true);
     }
   } else {
     statusEl.textContent = 'INAKTIV';
@@ -3982,8 +4234,167 @@ function clock() {
   updateReminderBadge();
 }
 
+// ─── HUB LINES ────────────────────────────────────────────────────────────────
+function layoutSkillTree() {
+  const canvas = document.getElementById('skill-canvas');
+  const hub = document.getElementById('skill-hub');
+  if (!canvas || !hub) return;
+
+  const W = canvas.offsetWidth;
+  const H = canvas.offsetHeight;
+  if (W < 10 || H < 10) { setTimeout(layoutSkillTree, 150); return; }
+
+  const cx = W / 2;
+  const cy = H / 2;
+  const ncx = cx - 33;
+  const ncy = cy - 30;
+  const hubR = 58;
+  const nodeD = 64;
+  const nodeR = 0;
+  const orbitR = (W / 2) * 0.30;
+
+  // Hub
+  hub.style.position = 'absolute';
+  hub.style.left = (cx - 59) + 'px';
+  hub.style.top  = (cy - 53) + 'px';
+  hub.style.transform = 'translate(-50%,-50%)';
+
+  // Nodes
+  const nodes = document.querySelectorAll('.stat-node');
+  nodes.forEach((node, i) => {
+    const angleDeg = -90 + i * (360 / nodes.length);
+    const angleRad = angleDeg * Math.PI / 180;
+    const nx = ncx + Math.cos(angleRad) * orbitR;
+    const ny = ncy + Math.sin(angleRad) * orbitR;
+
+    node.dataset.nx = nx.toFixed(1);
+    node.dataset.ny = ny.toFixed(1);
+    node.setAttribute('onclick', `expandStat('${node.dataset.key}',${nx.toFixed(1)},${ny.toFixed(1)})`);
+    node.style.position = 'absolute';
+    node.style.left = nx + 'px';
+    node.style.top  = ny + 'px';
+    node.style.transform = 'translate(-50%,-50%)';
+    node.style.width = nodeD + 'px';
+    node.style.height = nodeD + 'px';
+    node.style.display = 'flex';
+    node.style.alignItems = 'center';
+    node.style.justifyContent = 'center';
+
+    const label = node.querySelector('.node-label');
+    if (label) {
+      label.style.position = 'absolute';
+      label.style.top = ''; label.style.bottom = '-22px';
+      label.style.left = '50%'; label.style.right = '';
+      label.style.transform = 'translateX(-50%)';
+      label.style.padding = '1px 4px';
+      label.style.fontSize = '8px';
+    }
+  });
+
+  const svg = document.getElementById('hub-lines-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const lox = 5, loy = 8; // line offset (start only)
+  nodes.forEach((node, i) => {
+    const nx = parseFloat(node.dataset.nx);
+    const ny = parseFloat(node.dataset.ny);
+    const sx = cx + lox, sy = cy + loy;
+    const dx = nx - sx, dy = ny - sy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const ux = dx/dist, uy = dy/dist;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', (sx + ux * hubR).toFixed(1));
+    line.setAttribute('y1', (sy + uy * hubR).toFixed(1));
+    line.setAttribute('x2', (nx - ux * nodeR).toFixed(1));
+    line.setAttribute('y2', (ny - uy * nodeR).toFixed(1));
+    line.setAttribute('class', 'hub-line');
+    line.style.animationDelay = (-i * 0.15) + 's';
+    svg.appendChild(line);
+  });
+}
+
+function updateSavings() {
+  const amount = parseFloat(document.getElementById('savings-input').value) || 0;
+  state.savingsAmount = amount;
+  const milestones = [500, 2000, 5000, 10000, 20000];
+  const nodeIds = ['wlt_s1','wlt_s2','wlt_s3','wlt_s4','wlt_s5'];
+  const sp = state.skillProgress || {};
+  milestones.forEach((m, i) => {
+    if (!sp[nodeIds[i]] && amount >= m) {
+      sp[nodeIds[i]] = true;
+      const xps = [200,350,600,900,1500];
+      const gains = [1,2,3,5,7];
+      addXP(xps[i]);
+      state.stats['WLT'] = (state.stats['WLT']||1) + gains[i];
+      setTimeout(()=>notify(NI.trophy + `WLT Sparen: ${m.toLocaleString('de-DE')}€ erreicht!`,true),400);
+    }
+  });
+  state.skillProgress = sp;
+  save(); renderSavingsInvest();
+}
+
+function updateInvest() {
+  const amount = parseFloat(document.getElementById('invest-input').value) || 0;
+  const slots = parseInt(document.getElementById('portfolio-input').value) || 0;
+  state.investAmount = amount;
+  state.portfolioSlots = slots;
+  const sp = state.skillProgress || {};
+  // investTarget nodes
+  const investNodes = [
+    {id:'wlt_i1', target:1,    xp:200, gain:1},
+    {id:'wlt_i2', target:500,  xp:300, gain:2},
+    {id:'wlt_i4', target:2000, xp:500, gain:3},
+    {id:'wlt_i6', target:10000,xp:1000,gain:5},
+  ];
+  investNodes.forEach(n => {
+    if (!sp[n.id] && amount >= n.target) {
+      sp[n.id] = true; addXP(n.xp);
+      state.stats['WLT'] = (state.stats['WLT']||1) + n.gain;
+      setTimeout(()=>notify(NI.trophy + `WLT Investieren: ${n.target.toLocaleString('de-DE')}€ investiert!`,true),400);
+    }
+  });
+  // portfolioTarget nodes
+  const portfolioNodes = [
+    {id:'wlt_i3', target:2,  xp:250, gain:1},
+    {id:'wlt_i5', target:5,  xp:400, gain:2},
+  ];
+  portfolioNodes.forEach(n => {
+    if (!sp[n.id] && slots >= n.target) {
+      sp[n.id] = true; addXP(n.xp);
+      state.stats['WLT'] = (state.stats['WLT']||1) + n.gain;
+      setTimeout(()=>notify(NI.trophy + `WLT Portfolio: ${n.target} Positionen erreicht!`,true),400);
+    }
+  });
+  state.skillProgress = sp;
+  save(); renderSavingsInvest();
+}
+
+function renderSavingsInvest() {
+  const savings = state.savingsAmount || 0;
+  const invest = state.investAmount || 0;
+  const slots = state.portfolioSlots || 0;
+  const el = document.getElementById('dash-savings');
+  if (el) el.textContent = savings.toLocaleString('de-DE') + '€';
+  const investEl = document.getElementById('dash-invest');
+  if (investEl) investEl.textContent = invest.toLocaleString('de-DE') + '€';
+  const slotsEl = document.getElementById('dash-portfolio');
+  if (slotsEl) slotsEl.textContent = slots;
+  // Progress bar to next savings milestone
+  const milestones = [500, 2000, 5000, 10000, 20000];
+  const next = milestones.find(m => m > savings) || 20000;
+  const prev = milestones[milestones.indexOf(next)-1] || 0;
+  const pct = Math.min(100, ((savings - prev) / (next - prev)) * 100);
+  const bar = document.getElementById('dash-savings-bar');
+  if (bar) bar.style.width = pct + '%';
+  const nextEl = document.getElementById('dash-savings-next');
+  if (nextEl) nextEl.textContent = next.toLocaleString('de-DE') + '€';
+}
+
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 load(); render(); clock();
+// layoutSkillTree called only when tab is active
+window.addEventListener("resize", () => setTimeout(layoutSkillTree, 150));
 // Ensure routine renders on first load
 setTimeout(() => { 
   const el = document.getElementById('routine-list');
